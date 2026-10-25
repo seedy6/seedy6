@@ -117,12 +117,15 @@
     const key = dayKey(now);
     if (today && today.key === key) return renderPrayers();
     let data = store.get("prayers");
-    if (config.prayerUrl && (!data || data.key !== key || !data.source)) {
-      // Times from the Mac mini (SalahLog / PraySo) win over calculated ones.
+    if (config.salahLogUrl && (!data || data.key !== key || data.source !== "SalahLog")) {
+      // SalahLog's times win over calculated ones.
       try {
-        const res = await getJson(config.prayerUrl);
-        if (res.date === undefined || res.date === key) {
-          data = { key, timings: res.timings, hijri: res.hijri || "", source: res.source || "Mac mini" };
+        const res = await getJson(config.salahLogUrl);
+        const day = res.days && res.days[0];
+        const timings = {};
+        for (const p of PRAYERS) if (day && day[p.toLowerCase()]) timings[p] = day[p.toLowerCase()];
+        if (timings.Fajr && timings.Dhuhr && timings.Maghrib) {
+          data = { key, timings, hijri: (data && data.key === key && data.hijri) || "", source: "SalahLog" };
           store.set("prayers", data);
         }
       } catch (e) {}
@@ -147,7 +150,7 @@
       return;
     }
     today = { key, hijri: data.hijri, sample: !!data.sample, source: data.source, times: {} };
-    for (const p of PRAYERS) today.times[p] = toDate(data.timings[p], now);
+    for (const p of PRAYERS) if (data.timings[p]) today.times[p] = toDate(data.timings[p], now);
     renderPrayers();
   }
 
@@ -159,8 +162,10 @@
     $("hijriDate").textContent = today.hijri;
     $("hijriSep").hidden = !today.hijri;
     const now = new Date();
-    const next = PRAYERS.find((p) => p !== "Sunrise" && today.times[p] > now);
-    $("prayerRow").innerHTML = PRAYERS.map((p) => {
+    const shown = PRAYERS.filter((p) => today.times[p]);
+    const next = shown.find((p) => p !== "Sunrise" && today.times[p] > now);
+    $("prayerRow").style.gridTemplateColumns = `repeat(${shown.length}, 1fr)`;
+    $("prayerRow").innerHTML = shown.map((p) => {
       const t = today.times[p];
       const cls = p === next ? "next" : t < now ? "passed" : "";
       return `<div class="prayer ${cls}"><div class="p-name">${p}</div>` +
@@ -171,7 +176,7 @@
 
   function renderNextPrayer(now) {
     if (!today) { $("nextPrayer").textContent = ""; return; }
-    const next = PRAYERS.find((p) => p !== "Sunrise" && today.times[p] > now);
+    const next = PRAYERS.find((p) => p !== "Sunrise" && today.times[p] && today.times[p] > now);
     if (!next) { $("nextPrayer").textContent = "Fajr tomorrow"; return; }
     const mins = Math.ceil((today.times[next] - now) / 60000);
     const span = mins >= 60 ? `${Math.floor(mins / 60)}h ${mins % 60}m` : `${mins} min`;

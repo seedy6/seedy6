@@ -59,10 +59,10 @@ Defaults live in [`app/src/main/assets/web/config.js`](app/src/main/assets/web/c
 sound, prayer location and method, apps to pin and apps to hide. Set `remoteConfigUrl` to a JSON file on the
 Mac mini to change any of these without reinstalling.
 
-Prayer times come from the Mac mini when `prayerUrl` is set (`/tv/prayers.json` from `mac-mini/tv_feed.py`, meant to
-carry SalahLog's PraySo times). Otherwise they are calculated for Manchester by
-[api.aladhan.com](https://aladhan.com/prayer-times-api) with `method: 0`, Shia Ithna-Ashari (Jafari), and the
-screen labels them "calculated". Either way they are cached for the day.
+Prayer times come from SalahLog (`salahLogUrl`): najaf.org's Manchester times, cached in Cortana's
+PocketBase, with Asr and Isha derived astronomically. If SalahLog can't be reached, they are calculated by
+[api.aladhan.com](https://aladhan.com/prayer-times-api) for Manchester with `method: 0`, Shia Ithna-Ashari
+(Jafari), and the screen labels them "calculated". Either way they are cached for the day.
 
 ## Mac mini metrics
 

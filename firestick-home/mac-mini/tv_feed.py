@@ -3,9 +3,8 @@
 
     python3 tv_feed.py [--port 8787] [--file metrics.json]
 
-The Fire Stick fetches http://<mac-mini-ip>:8787/tv/metrics.json and /tv/prayers.json.
-Until these are wired to Cortana's real data (SalahLog's PraySo times and the daily metrics),
-they serve the JSON files you point them at (formats: metrics.sample.json, prayers.sample.json).
+The Fire Stick fetches http://<mac-mini-ip>:8787/tv/metrics.json. Until this is wired to
+Cortana's real data, it serves the JSON file you point it at (format: metrics.sample.json).
 """
 import argparse
 import http.server
@@ -16,7 +15,7 @@ HERE = pathlib.Path(__file__).resolve().parent
 
 
 def build_feed(path: pathlib.Path) -> dict:
-    # Replace these reads with Cortana's data (SalahLog, PocketBase etc.) once we wire it up.
+    # Replace this read with Cortana's data (PocketBase) once we wire it up.
     return json.loads(path.read_text())
 
 
@@ -24,9 +23,8 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--port", type=int, default=8787)
     parser.add_argument("--file", type=pathlib.Path, default=HERE / "metrics.sample.json")
-    parser.add_argument("--prayers", type=pathlib.Path, default=HERE / "prayers.sample.json")
     args = parser.parse_args()
-    routes = {"/tv/metrics.json": args.file, "/tv/prayers.json": args.prayers}
+    routes = {"/tv/metrics.json": args.file}
 
     class Handler(http.server.BaseHTTPRequestHandler):
         def do_GET(self):

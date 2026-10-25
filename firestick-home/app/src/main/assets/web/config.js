@@ -8,10 +8,10 @@ window.HOME_CONFIG = {
   // Replay the intro when you come back to the home screen after this many minutes away.
   introAfterMinutes: 120,
 
-  // Prayer times. prayerUrl is the Mac mini's copy of SalahLog's PraySo times (see mac-mini/README);
-  // when it is empty or unreachable, times are calculated by api.aladhan.com for the city below
-  // with method 0 = Shia Ithna-Ashari (Jafari).
-  prayerUrl: "",
+  // Prayer times from SalahLog (najaf.org times, cached in Cortana's PocketBase). If it can't be
+  // reached they are calculated by api.aladhan.com for the city below with method 0 = Shia
+  // Ithna-Ashari (Jafari), and the screen says so.
+  salahLogUrl: "https://salah-log.vercel.app/api/prayer-times?location=united-kingdom_manchester",
   prayer: { city: "Manchester", country: "United Kingdom", method: 0 },
 
   // JSON feed of daily metrics from the Mac mini; see mac-mini/README.md for the format.
@@ -30,7 +30,7 @@ window.HOME_CONFIG = {
   // Web apps (for example from the Mac mini) opened full-screen on the TV; Back returns home.
   // A tile only appears once its url is set.
   webApps: [
-    { label: "Munajat", subtitle: "Duas", url: "" }
+    { label: "Munajat", subtitle: "Duas", url: "https://munajatlog.vercel.app" }
   ],
 
   // Kept out of the apps row when onlyPinnedApps is false (they still appear under All apps).
