@@ -48,6 +48,7 @@ class MainActivity : Activity() {
     override fun onResume() {
         super.onResume()
         HomePrefs.setRedirectPaused(this, false) // back on Welcome Home, so Home leads here again
+        HomeSwitch.ensureOn(this) // in case Fire OS cleared the redirect
         web.onResume()
         web.resumeTimers()
         js("window.onHomeResume && onHomeResume()")

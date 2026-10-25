@@ -480,7 +480,14 @@
     }));
     if (onDevice && !native.isHomeRedirectOn()) {
       // The Home-button switch is off, so Home and start-up still go to Amazon's screen.
-      row.appendChild(utilTile("pin", "Make this my home", openHomeSetup));
+      const tile = utilTile("pin", "Make this my home", () => {
+        if (typeof native.enableHomeRedirect === "function" && native.enableHomeRedirect()) {
+          tile.remove();
+          focusFirst();
+          toast("Home now opens Welcome Home");
+        } else openHomeSetup();
+      });
+      row.appendChild(tile);
     }
     if (typeof native.checkForUpdates === "function") {
       row.appendChild(utilTile("refresh", "Check for updates", () => {
@@ -630,6 +637,7 @@
       isHomeRedirectOn: () => true,
       openAccessibilitySettings: () => true,
       deviceAddress: () => "192.168.0.15",
+      enableHomeRedirect: () => false,
       fetch: () => {}
     };
   }

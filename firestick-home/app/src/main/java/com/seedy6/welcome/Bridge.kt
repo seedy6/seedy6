@@ -1,6 +1,5 @@
 package com.seedy6.welcome
 
-import android.content.ComponentName
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Canvas
@@ -66,11 +65,11 @@ class Bridge(private val activity: MainActivity) {
 
     /** True when the accessibility service that sends the Home button here is switched on. */
     @JavascriptInterface
-    fun isHomeRedirectOn(): Boolean {
-        val enabled = Settings.Secure.getString(activity.contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES) ?: ""
-        val service = ComponentName(activity, HomeRedirectService::class.java)
-        return enabled.split(':').any { ComponentName.unflattenFromString(it) == service }
-    }
+    fun isHomeRedirectOn(): Boolean = HomeSwitch.isOn(activity)
+
+    /** Switch the redirect on, if WRITE_SECURE_SETTINGS has been granted over ADB. */
+    @JavascriptInterface
+    fun enableHomeRedirect(): Boolean = HomeSwitch.ensureOn(activity)
 
     /** The Fire Stick's address on the home Wi-Fi (for connecting with ADB), or "" if offline. */
     @JavascriptInterface

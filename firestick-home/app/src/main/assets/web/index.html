@@ -50,14 +50,13 @@
     <div id="homeSetup" hidden>
       <div class="hs-card">
         <div class="hs-title">Make Welcome Home your home screen</div>
-        <p class="hs-lead">Fire TV doesn't list this switch in its own menus, so it's switched on once over Wi-Fi with ADB. An Android phone on the same Wi-Fi can do it.</p>
+        <p class="hs-lead">Fire TV doesn't list this switch in its own menus, and can clear it when it restarts. Give Welcome Home permission once, from an Android phone on the same Wi-Fi, and it keeps the switch on by itself.</p>
         <ol class="hs-steps">
           <li>On the Fire Stick: <b>Settings → My Fire TV → Developer options → ADB debugging → On</b>.</li>
-          <li>On your phone, install <b>Bugjaeger</b> (or another ADB app) from the Play Store and connect to <b class="hs-ip" id="hsAddress"></b>, port <b>5555</b>.</li>
-          <li>When the TV asks <b>Allow USB debugging?</b>, tick <b>Always allow</b> and choose <b>OK</b>.</li>
-          <li>In the app's shell, run these two lines:
-            <code>settings put secure enabled_accessibility_services com.seedy6.welcome/com.seedy6.welcome.HomeRedirectService</code>
-            <code>settings put secure accessibility_enabled 1</code></li>
+          <li>On your phone, open <b>Bugjaeger</b> (or another ADB app) and connect to <b class="hs-ip" id="hsAddress"></b>, port <b>5555</b>. Allow it on the TV if asked.</li>
+          <li>In the app's command box, run:
+            <code>pm grant com.seedy6.welcome android.permission.WRITE_SECURE_SETTINGS</code></li>
+          <li>Come back here and select <b>Make this my home</b> again.</li>
           <li>Turn <b>ADB debugging</b> off again afterwards.</li>
         </ol>
         <p class="hs-foot">Press Back to close. This tile disappears once the switch is on.</p>
