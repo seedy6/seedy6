@@ -135,12 +135,12 @@ const Intro = (() => {
         <div class="side right">
           <img class="ink-bg" src="art/fengwei-bg.webp" alt="">
           <img class="ink-chars" src="art/fengwei-chars.webp" alt="">
-          <img class="ink-stroke" src="art/fengwei-stroke.webp" alt="">
+          <div class="ink-wipe"><img class="ink-stroke" src="art/fengwei-stroke.webp" alt=""></div>
           <img class="ink-seal" src="art/fengwei-seal.webp" alt="">
           <div class="embers">${"<i></i>".repeat(14)}</div>
           <div class="tag">Feng Wei</div>
         </div>
-        <svg class="seam" viewBox="0 0 1920 1080" preserveAspectRatio="none" aria-hidden="true"><line x1="1080" y1="0" x2="880" y2="1080"/></svg>
+        <div class="seam"></div>
         <div class="streak"></div>
         <div class="title"><div class="t1">Welcome</div><div class="t2"><span class="decode"></span><span class="name">${name}</span></div></div>
         <div class="sub">Ready for today</div>
@@ -213,7 +213,10 @@ const Ambient = (() => {
       hue: Math.random() < 0.8 ? 190 : 95 };
   }
 
+  let skip = false;
   function frame() {
+    raf = requestAnimationFrame(frame);
+    if ((skip = !skip)) return; // 30 fps is plenty for drifting dust and spares the Fire Stick
     g.clearRect(0, 0, W, H);
     for (const p of parts) {
       p.x += p.vx; p.y += p.vy; p.life += 0.03;
@@ -223,17 +226,17 @@ const Ambient = (() => {
       g.beginPath(); g.arc(p.x, p.y, p.r, 0, Math.PI * 2); g.fill();
       if (p.y < -10 || p.x < -10 || p.x > W + 10) Object.assign(p, spawn(false, p.kind));
     }
-    raf = requestAnimationFrame(frame);
   }
 
   return {
+    stop() { cancelAnimationFrame(raf); if (g) g.clearRect(0, 0, W, H); },
     start(t) {
       canvas = canvas || document.getElementById("fx");
       g = g || canvas.getContext("2d");
       canvas.width = W; canvas.height = H;
       theme = t;
-      const embers = t === "fengwei" ? 46 : t === "versus" ? 30 : 0;
-      const stars = t === "spartan" ? 70 : t === "versus" ? 40 : 0;
+      const embers = t === "fengwei" ? 36 : t === "versus" ? 20 : 0;
+      const stars = t === "spartan" ? 50 : t === "versus" ? 26 : 0;
       parts = [
         ...Array.from({ length: embers }, () => spawn(true, "ember")),
         ...Array.from({ length: stars }, () => spawn(true, "star"))

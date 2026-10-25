@@ -37,7 +37,7 @@ const Sfx = (() => {
     bus = c.createGain();
     bus.connect(comp);
     const verb = c.createConvolver();
-    verb.buffer = makeImpulse(c, 3.6, 2.4);
+    verb.buffer = makeImpulse(c, 2.8, 2.4); // long enough to feel big, short enough for the Fire Stick
     const wet = c.createGain();
     wet.gain.value = 0.45;
     bus.connect(verb);

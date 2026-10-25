@@ -27,6 +27,11 @@ class MainActivity : Activity() {
             settings.domStorageEnabled = true
             settings.mediaPlaybackRequiresUserGesture = false
             settings.allowFileAccess = true
+            // Lay the page out at the width its viewport meta asks for (1920) and zoom it to fit the
+            // screen, instead of the TV's 960-wide CSS viewport; ignore system font scaling.
+            settings.useWideViewPort = true
+            settings.loadWithOverviewMode = true
+            settings.textZoom = 100
             isFocusable = true
             isFocusableInTouchMode = true
             webViewClient = WebViewClient()

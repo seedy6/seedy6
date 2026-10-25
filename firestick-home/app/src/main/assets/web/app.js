@@ -29,13 +29,20 @@
   const getJson = (url) => getText(url).then(JSON.parse);
 
   // ---------- Stage scaling: the page is designed at 1920x1080 ----------
+  // On the Fire Stick the WebView itself lays the page out 1920 wide (viewport meta + wide viewport),
+  // so this comes out at 1; in a browser it shrinks the stage to the window. Sizes can be 0 or stale
+  // before the first layout, so it runs again once things settle.
   function fit() {
-    const s = Math.min(innerWidth / 1920, innerHeight / 1080);
-    const x = (innerWidth - 1920 * s) / 2, y = (innerHeight - 1080 * s) / 2;
+    const w = document.documentElement.clientWidth || innerWidth, h = document.documentElement.clientHeight || innerHeight;
+    if (!w || !h) return;
+    const s = Math.min(w / 1920, h / 1080);
+    const x = (w - 1920 * s) / 2, y = (h - 1080 * s) / 2;
     $("stage").style.transform = `translate(${x}px, ${y}px) scale(${s})`;
   }
   addEventListener("resize", fit);
+  addEventListener("load", fit);
   fit();
+  [100, 500, 1500].forEach((ms) => setTimeout(fit, ms));
 
   // ---------- Theme ----------
   const THEMES = { versus: "Spartan × Feng Wei", spartan: "Spartan", fengwei: "Feng Wei" };
@@ -59,7 +66,20 @@
   let lastSeen = Date.now();
   function playIntro() {
     $("drawer").hidden = true;
-    Intro.play(theme, config.name, () => focusFirst());
+    Ambient.stop(); // the intro covers it; no point drawing it underneath
+    Intro.play(theme, config.name, () => { Ambient.start(theme); focusFirst(); });
+  }
+
+  // Decode the intro's artwork and fonts up front so the first frames don't stutter.
+  function preload() {
+    const images = ["fengwei-bg", "fengwei-chars", "fengwei-stroke", "fengwei-seal"].map((n) => {
+      const img = new Image();
+      img.src = `art/${n}.webp`;
+      return img.decode ? img.decode().catch(() => {}) : Promise.resolve();
+    });
+    const fonts = document.fonts ? document.fonts.ready.catch(() => {}) : Promise.resolve();
+    const timeout = new Promise((r) => setTimeout(r, 2500));
+    return Promise.race([Promise.all([...images, fonts]), timeout]);
   }
   window.replayIntro = playIntro;
   window.onHomeResume = () => {
@@ -369,7 +389,7 @@
       focusFirst();
     } else if (params.has("hold")) {
       // Wait for replayIntro() (used when recording demos).
-    } else if (onDevice) playIntro();
+    } else if (onDevice) preload().then(() => { fit(); playIntro(); });
     else showStartButton(); // browsers only allow sound after a tap
   }
 
