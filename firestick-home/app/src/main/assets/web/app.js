@@ -70,11 +70,13 @@
     if (awayMin >= config.introAfterMinutes) playIntro();
   };
   window.onHomePressed = () => {
-    if (!$("drawer").hidden) closeDrawer();
+    if (!$("webApp").hidden) closeWebApp();
+    else if (!$("drawer").hidden) closeDrawer();
     else focusFirst();
   };
   window.onBackKey = () => {
     if (Intro.playing) Intro.skip();
+    else if (!$("webApp").hidden) closeWebApp();
     else if (!$("drawer").hidden) closeDrawer();
   };
   window.onMenuKey = switchTheme;
@@ -235,6 +237,14 @@
     b.onclick = () => { Sfx.select(); if (!native.launch(app.pkg)) toast("Couldn't open " + app.label); };
     return b;
   }
+  function webTile(app) {
+    const b = document.createElement("button");
+    b.className = "tile web focusable";
+    b.innerHTML = `<span class="w-name">${esc(app.label)}</span><span class="w-sub">${esc(app.subtitle || "")}</span>` +
+      `<span class="label">${esc(app.label)}</span>`;
+    b.onclick = () => { Sfx.select(); openWebApp(app); };
+    return b;
+  }
   function utilTile(icon, label, action) {
     const b = document.createElement("button");
     b.className = "tile util focusable";
@@ -251,11 +261,27 @@
     const rest = apps.filter((a) => !config.pinnedApps.includes(a.pkg) && !config.hiddenApps.includes(a.pkg));
     const row = $("appRow");
     row.innerHTML = "";
-    [...pinned, ...rest].slice(0, 8).forEach((a) => row.appendChild(appTile(a)));
+    // Fall back to other apps if none of the pinned ones are installed, so the row is never empty.
+    const shown = config.onlyPinnedApps && pinned.length ? pinned : [...pinned, ...rest];
+    shown.slice(0, 8).forEach((a) => row.appendChild(appTile(a)));
+    (config.webApps || []).filter((w) => w.url).forEach((w) => row.appendChild(webTile(w)));
     row.appendChild(utilTile("grid", "All apps", openDrawer));
     row.appendChild(utilTile("theme", "Theme", switchTheme));
     row.appendChild(utilTile("replay", "Replay intro", playIntro));
     row.appendChild(utilTile("settings", "Settings", () => native.openSettings()));
+  }
+
+  // Web apps run in a full-screen frame over the home screen; Back or Home closes it.
+  function openWebApp(app) {
+    const frame = $("webFrame");
+    frame.src = app.url;
+    $("webApp").hidden = false;
+    frame.focus();
+  }
+  function closeWebApp() {
+    $("webApp").hidden = true;
+    $("webFrame").src = "about:blank";
+    focusFirst();
   }
 
   function openDrawer() {
@@ -303,6 +329,7 @@
   document.addEventListener("keydown", (e) => {
     Sfx.unlock();
     if (Intro.playing) { Intro.skip(); e.preventDefault(); return; }
+    if (!$("webApp").hidden) return; // keys belong to the web app; Back is handled natively
     if (KEYS[e.key]) { move(KEYS[e.key]); e.preventDefault(); }
     else if (e.key === "Escape" || e.key === "Backspace") { window.onBackKey(); e.preventDefault(); }
     else if (e.key === "m") switchTheme(); // desktop preview stand-in for the Menu button
@@ -337,6 +364,7 @@
       `<rect width="320" height="180" fill="url(#g)"/><text x="160" y="104" font-family="sans-serif" font-size="34" ` +
       `font-weight="700" fill="#fff" text-anchor="middle">${label}</text></svg>`);
     const list = [
+      ["com.stremio.one", "Stremio", "#5b2bb5", "#1b0d3d"],
       ["com.amazon.firetv.youtube", "YouTube", "#c4302b", "#5c0d0b"],
       ["com.netflix.ninja", "Netflix", "#141414", "#5a0a0e"],
       ["com.amazon.firebat", "Prime Video", "#0f79af", "#06263d"],

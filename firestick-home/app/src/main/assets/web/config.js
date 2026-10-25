@@ -19,18 +19,21 @@ window.HOME_CONFIG = {
   metricsUrl: "",
   remoteConfigUrl: "",
 
-  // Shown first in the apps row, in this order, when installed. Others follow, minus hiddenApps.
+  // The apps row: these apps in this order, when installed. All apps shows everything else.
   pinnedApps: [
-    "com.amazon.firetv.youtube",
-    "com.netflix.ninja",
-    "com.amazon.firebat",
-    "com.disney.disneyplus",
-    "uk.co.bbc.iplayer",
-    "com.spotify.tv.android",
-    "com.plexapp.android",
-    "org.xbmc.kodi"
+    "com.stremio.one", // Stremio
+    "com.amazon.firetv.youtube", // YouTube on Fire TV
+    "com.google.android.youtube.tv" // YouTube on other Android TV devices
   ],
-  // Kept out of the apps row (they still appear under All apps).
+  onlyPinnedApps: true, // false: fill the rest of the row with other installed apps
+
+  // Web apps (for example from the Mac mini) opened full-screen on the TV; Back returns home.
+  // A tile only appears once its url is set.
+  webApps: [
+    { label: "Munajat", subtitle: "Duas", url: "" }
+  ],
+
+  // Kept out of the apps row when onlyPinnedApps is false (they still appear under All apps).
   hiddenApps: [
     "com.amazon.tv.launcher",
     "com.amazon.venezia",

@@ -180,6 +180,14 @@ body.intro-on #home { opacity: 0; transform: translateY(18px); }
 .drawer-title { font-family: var(--display); font-size: 64px; letter-spacing: var(--display-spacing); text-transform: uppercase; margin-bottom: 36px; color: var(--accent); }
 .drawer-grid { display: grid; grid-template-columns: repeat(5, 288px); gap: 70px 52px; height: 900px; overflow: hidden; padding: 10px; }
 
+.tile.web { background: linear-gradient(135deg, #1a1208, #050505 70%); border: 1px solid var(--line); text-align: left; padding: 0 26px; }
+.tile.web::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 5px; background: linear-gradient(180deg, var(--accent-2), #e0302a); }
+.tile.web .w-name { display: block; font-family: var(--display); font-size: 40px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text); }
+.tile.web .w-sub { display: block; margin-top: 6px; font-size: 24px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent-2); }
+.tile.web .label { display: none; }
+#webApp { position: absolute; top: 0; right: 0; bottom: 0; left: 0; z-index: 8; background: #000; }
+#webApp iframe { width: 100%; height: 100%; border: 0; background: #fff; }
+
 #toast {
   position: absolute; left: 50%; bottom: 60px; transform: translate(-50%, 30px); z-index: 20; opacity: 0;
   padding: 14px 30px; background: var(--panel); border: 1px solid var(--accent); font-size: 30px; letter-spacing: 0.08em;
