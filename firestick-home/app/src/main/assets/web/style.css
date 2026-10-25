@@ -63,7 +63,7 @@
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { width: 100%; height: 100%; overflow: hidden; background: #000; }
+html, body { width: 100%; height: 100%; overflow: hidden; background: #000; color-scheme: dark; }
 body { font-family: var(--body); color: var(--text); font-weight: 600; }
 
 /* Everything is laid out on a fixed 1920x1080 stage that app.js scales to the screen. */
@@ -187,6 +187,17 @@ body.intro-on #home { opacity: 0; transform: translateY(18px); }
 .tile.web .label { display: none; }
 #webApp { position: absolute; top: 0; right: 0; bottom: 0; left: 0; z-index: 8; background: #000; }
 #webApp iframe { width: 100%; height: 100%; border: 0; background: #fff; }
+
+#startGate {
+  position: absolute; top: 0; right: 0; bottom: 0; left: 0; z-index: 30; border: 0; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px;
+  background: radial-gradient(700px 420px at 50% 50%, rgba(120, 20, 14, 0.35), transparent 70%), #020203; color: #eef6fa;
+}
+#startGate .g-play { font-family: "Orbitron", sans-serif; font-weight: 400; font-size: 64px; letter-spacing: 0.6em; padding-left: 0.6em; text-transform: uppercase;
+  padding: 28px 40px 28px calc(40px + 0.6em); border: 1px solid rgba(242, 184, 75, 0.6); box-shadow: 0 0 40px rgba(242, 184, 75, 0.15); }
+#startGate:focus .g-play, #startGate:hover .g-play { border-color: #f2b84b; box-shadow: 0 0 60px rgba(242, 184, 75, 0.35); }
+#startGate .g-sub { font-size: 28px; letter-spacing: 0.2em; text-transform: uppercase; color: #93a7b3; }
+.drawer-title { cursor: pointer; }
 
 #toast {
   position: absolute; left: 50%; bottom: 60px; transform: translate(-50%, 30px); z-index: 20; opacity: 0;

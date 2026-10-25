@@ -31,7 +31,8 @@
   // ---------- Stage scaling: the page is designed at 1920x1080 ----------
   function fit() {
     const s = Math.min(innerWidth / 1920, innerHeight / 1080);
-    $("stage").style.transform = `scale(${s})`;
+    const x = (innerWidth - 1920 * s) / 2, y = (innerHeight - 1080 * s) / 2;
+    $("stage").style.transform = `translate(${x}px, ${y}px) scale(${s})`;
   }
   addEventListener("resize", fit);
   fit();
@@ -247,7 +248,11 @@
     b.className = "tile web focusable";
     b.innerHTML = `<span class="w-name">${esc(app.label)}</span><span class="w-sub">${esc(app.subtitle || "")}</span>` +
       `<span class="label">${esc(app.label)}</span>`;
-    b.onclick = () => { Sfx.select(); openWebApp(app); };
+    b.onclick = () => {
+      Sfx.select();
+      if (onDevice) openWebApp(app);
+      else toast(`On the TV this opens ${app.label} full-screen`);
+    };
     return b;
   }
   function utilTile(icon, label, action) {
@@ -288,6 +293,9 @@
     $("webFrame").src = "about:blank";
     focusFirst();
   }
+
+  document.querySelector(".drawer-title").onclick = () => closeDrawer();
+  $("intro").onclick = () => Intro.playing && Intro.skip();
 
   function openDrawer() {
     const grid = $("drawerGrid");
@@ -332,6 +340,7 @@
   }
   const KEYS = { ArrowLeft: "left", ArrowRight: "right", ArrowUp: "up", ArrowDown: "down" };
   document.addEventListener("keydown", (e) => {
+    if (document.getElementById("startGate")) return;
     Sfx.unlock();
     if (Intro.playing) { Intro.skip(); e.preventDefault(); return; }
     if (!$("webApp").hidden) return; // keys belong to the web app; Back is handled natively
@@ -358,7 +367,19 @@
     if (params.has("nointro")) {
       document.body.classList.remove("intro-on");
       focusFirst();
-    } else if (!params.has("hold")) playIntro();
+    } else if (params.has("hold")) {
+      // Wait for replayIntro() (used when recording demos).
+    } else if (onDevice) playIntro();
+    else showStartButton(); // browsers only allow sound after a tap
+  }
+
+  function showStartButton() {
+    const gate = document.createElement("button");
+    gate.id = "startGate";
+    gate.innerHTML = `<span class="g-play">Play intro</span><span class="g-sub">Sound on · or use the arrow keys, Enter and Esc</span>`;
+    gate.onclick = () => { gate.remove(); Sfx.unlock(); playIntro(); };
+    $("stage").appendChild(gate);
+    gate.focus();
   }
 
   // ---------- Desktop preview stand-in for window.Android ----------
