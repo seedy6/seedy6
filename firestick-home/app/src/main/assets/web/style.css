@@ -138,6 +138,28 @@ body.intro-on #home { opacity: 0; transform: translateY(18px); }
 .prayer.next .p-name, .prayer.next .p-time { color: var(--accent-2); }
 .empty { font-size: 28px; color: var(--muted); padding: 10px 0 6px; }
 
+.weather { display: flex; align-items: center; gap: 44px; }
+.wx-now { display: flex; align-items: center; gap: 26px; }
+.wx-icon .wx-svg { width: 104px; height: 104px; }
+.wx-svg { fill: none; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; overflow: visible; }
+.wx-svg .wx-sun, .wx-svg .wx-moon { stroke: var(--accent-2); }
+.wx-svg .wx-cloud { stroke: var(--text); }
+.wx-svg .wx-drop { stroke: var(--accent); }
+.wx-temp { font-family: var(--display); font-size: 96px; line-height: 0.9; letter-spacing: 0.02em; }
+.wx-cond { font-size: 32px; text-transform: uppercase; letter-spacing: 0.14em; }
+.wx-sub { font-size: 24px; color: var(--muted); margin-top: 6px; }
+.wx-sep { width: 1px; align-self: stretch; background: var(--line); }
+.wx-day { display: flex; flex-direction: column; gap: 8px; font-family: var(--display); font-size: 30px; font-variant-numeric: tabular-nums; }
+.wx-day .wx-k { display: inline-block; width: 92px; font-family: var(--body); font-size: 22px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
+.wx-hours { flex: 1; display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
+.wx-hour { text-align: center; }
+.wx-h-time { font-size: 22px; color: var(--muted); letter-spacing: 0.08em; }
+.wx-h-icon .wx-svg { width: 50px; height: 50px; margin: 4px auto 2px; display: block; }
+.wx-h-temp { font-family: var(--display); font-size: 30px; }
+.wx-h-rain { font-size: 20px; color: var(--accent); }
+[data-theme="spartan"] .wx-temp, [data-theme="versus"] .wx-temp { font-size: 76px; }
+[data-theme="spartan"] .wx-h-temp, [data-theme="versus"] .wx-h-temp, [data-theme="spartan"] .wx-day, [data-theme="versus"] .wx-day { font-size: 26px; }
+
 .metric-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 22px; }
 .metric { display: flex; align-items: center; gap: 20px; min-height: 104px; }
 .metric svg { width: 96px; height: 96px; flex: none; transform: rotate(-90deg); }

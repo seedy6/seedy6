@@ -233,19 +233,105 @@
     if (current && current.dataset.prayer !== next) renderPrayers();
   }
 
+  // ---------- Weather (open-meteo.com) ----------
+  const WX_PATHS = {
+    sun: `<circle cx="32" cy="32" r="10"/><path d="M32 8v7M32 49v7M8 32h7M49 32h7M15 15l5 5M44 44l5 5M15 49l5-5M44 20l5-5"/>`,
+    moon: `<path d="M40 12a20 20 0 1 0 12 30 16 16 0 0 1-12-30z"/>`,
+    cloud: `<path d="M19 48h28a11 11 0 0 0 0-22 15 15 0 0 0-29-3 10 10 0 0 0 1 25z"/>`,
+    smallSun: `<circle cx="22" cy="22" r="7"/><path d="M22 7v4M7 22h4M11 11l3 3M33 11l-3 3"/>`,
+    smallMoon: `<path d="M26 9a11 11 0 1 0 6 17 9 9 0 0 1-6-17z"/>`,
+    fog: `<path d="M12 26h40M8 36h48M14 46h36"/>`,
+    drizzle: `<path d="M24 54v3M32 54v3M40 54v3"/>`,
+    rain: `<path d="M24 52l-3 7M33 52l-3 7M42 52l-3 7"/>`,
+    snow: `<path d="M24 55h0M32 58h0M40 55h0M28 50h0M36 50h0" stroke-width="5" stroke-linecap="round"/>`,
+    bolt: `<path d="M34 46l-6 9h8l-6 9" />`
+  };
+  // WMO weather codes -> what to say and which icon to draw.
+  function wxKind(code) {
+    if (code === 0) return ["Clear", "clear"];
+    if (code <= 2) return [code === 1 ? "Mostly clear" : "Partly cloudy", "partly"];
+    if (code === 3) return ["Cloudy", "cloud"];
+    if (code <= 48) return ["Fog", "fog"];
+    if (code <= 57) return ["Drizzle", "drizzle"];
+    if (code <= 67 || (code >= 80 && code <= 82)) return [code >= 65 || code === 82 ? "Heavy rain" : "Rain", "rain"];
+    if (code <= 86) return ["Snow", "snow"];
+    return ["Thunderstorms", "thunder"];
+  }
+  function wxIcon(code, day) {
+    const kind = wxKind(code)[1];
+    const parts = {
+      clear: [day ? ["sun", WX_PATHS.sun] : ["moon", WX_PATHS.moon]],
+      partly: [[day ? "sun" : "moon", day ? WX_PATHS.smallSun : WX_PATHS.smallMoon], ["cloud", WX_PATHS.cloud]],
+      cloud: [["cloud", WX_PATHS.cloud]],
+      fog: [["cloud", WX_PATHS.fog]],
+      drizzle: [["cloud", WX_PATHS.cloud], ["drop", WX_PATHS.drizzle]],
+      rain: [["cloud", WX_PATHS.cloud], ["drop", WX_PATHS.rain]],
+      snow: [["cloud", WX_PATHS.cloud], ["drop", WX_PATHS.snow]],
+      thunder: [["cloud", WX_PATHS.cloud], ["sun", WX_PATHS.bolt]]
+    }[kind];
+    return `<svg class="wx-svg" viewBox="0 0 64 64" aria-hidden="true">` +
+      parts.map(([cls, d]) => `<g class="wx-${cls}">${d}</g>`).join("") + `</svg>`;
+  }
+
+  async function refreshWeather() {
+    const w = config.weather;
+    if (!w) return;
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${w.latitude}&longitude=${w.longitude}` +
+      "&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,is_day" +
+      "&hourly=temperature_2m,weather_code,precipitation_probability,is_day" +
+      "&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max" +
+      "&timezone=Europe%2FLondon&forecast_days=2&wind_speed_unit=mph";
+    let data = null, sample = false;
+    try {
+      data = await getJson(url);
+      store.set("weather", { at: Date.now(), data });
+    } catch (e) {
+      const cached = store.get("weather");
+      if (cached && Date.now() - cached.at < 6 * 3600000) data = cached.data;
+      else if (!onDevice) { data = PreviewBridge.sampleWeather(); sample = true; }
+    }
+    if (!data || !data.current) { $("weatherPanel").hidden = true; return; }
+    renderWeather(data, sample);
+  }
+
+  function renderWeather(d, sample) {
+    const c = d.current, deg = (t) => `${Math.round(t)}°`;
+    const [condition] = wxKind(c.weather_code);
+    // Hourly times are local ("2026-10-25T17:00"); show the next six from the current hour on.
+    const hourKey = c.time.slice(0, 13);
+    let i = d.hourly.time.findIndex((t) => t.slice(0, 13) === hourKey);
+    if (i < 0) i = 0;
+    const hours = d.hourly.time.slice(i + 1, i + 7).map((t, k) => {
+      const j = i + 1 + k;
+      return `<div class="wx-hour"><div class="wx-h-time">${t.slice(11, 16)}</div>` +
+        `<div class="wx-h-icon">${wxIcon(d.hourly.weather_code[j], d.hourly.is_day[j])}</div>` +
+        `<div class="wx-h-temp">${deg(d.hourly.temperature_2m[j])}</div>` +
+        `<div class="wx-h-rain">${d.hourly.precipitation_probability[j]}%</div></div>`;
+    }).join("");
+    $("weatherPlace").textContent = config.weather.place;
+    $("weatherBadge").hidden = !sample;
+    $("weather").innerHTML =
+      `<div class="wx-now"><div class="wx-icon">${wxIcon(c.weather_code, c.is_day)}</div>` +
+      `<div class="wx-temp">${deg(c.temperature_2m)}</div>` +
+      `<div class="wx-what"><div class="wx-cond">${condition}</div>` +
+      `<div class="wx-sub">Feels ${deg(c.apparent_temperature)} · Wind ${Math.round(c.wind_speed_10m)} mph</div></div></div>` +
+      `<div class="wx-sep"></div>` +
+      `<div class="wx-day"><div><span class="wx-k">High</span>${deg(d.daily.temperature_2m_max[0])}</div>` +
+      `<div><span class="wx-k">Low</span>${deg(d.daily.temperature_2m_min[0])}</div>` +
+      `<div><span class="wx-k">Rain</span>${d.daily.precipitation_probability_max[0]}%</div></div>` +
+      `<div class="wx-sep"></div>` +
+      `<div class="wx-hours">${hours}</div>`;
+    $("weatherPanel").hidden = false;
+  }
+
   // ---------- Metrics from the Mac mini ----------
   async function refreshMetrics() {
-    let feed = null, sample = false;
+    let feed = null;
     if (config.metricsUrl) {
       try { feed = await getJson(config.metricsUrl); } catch (e) { feed = null; }
-    } else if (!onDevice) {
-      feed = PreviewBridge.sampleMetrics();
-      sample = true;
     }
-    $("metricsBadge").hidden = !sample;
-    $("metricsBadge").textContent = "Sample data";
     // Until the Mac mini feed is set up, leave the panel out rather than nag about it.
-    $("metricsPanel").hidden = !config.metricsUrl && !sample;
+    $("metricsPanel").hidden = !config.metricsUrl;
     if (!feed || !Array.isArray(feed.metrics) || !feed.metrics.length) {
       $("metricsUpdated").textContent = "";
       $("metricRow").innerHTML = `<div class="empty" style="grid-column: 1 / -1">` +
@@ -317,10 +403,13 @@
   function loadApps() {
     try { apps = JSON.parse(native.getApps()); } catch (e) { apps = []; }
     apps.sort((a, b) => a.label.localeCompare(b.label));
-    const byPkg = Object.fromEntries(apps.map((a) => [a.pkg, a]));
-    const replaced = (pkg) => (config.replacedBy[pkg] || []).some((other) => byPkg[other]);
-    const pinned = config.pinnedApps.map((p) => byPkg[p]).filter((a) => a && !replaced(a.pkg));
-    const rest = apps.filter((a) => !config.pinnedApps.includes(a.pkg) && !config.hiddenApps.includes(a.pkg));
+    // An id is a package name, or "label:<name>" to match the name an app shows.
+    const find = (id) => id.startsWith("label:")
+      ? apps.find((a) => a.label.toLowerCase().replace(/\s+/g, "").includes(id.slice(6).toLowerCase().replace(/\s+/g, "")))
+      : apps.find((a) => a.pkg === id);
+    const replaced = (pkg) => (config.replacedBy[pkg] || []).some((other) => find(other));
+    const pinned = [...new Set(config.pinnedApps.map(find).filter((a) => a && !replaced(a.pkg)))];
+    const rest = apps.filter((a) => !pinned.includes(a) && !config.hiddenApps.includes(a.pkg));
     const row = $("appRow");
     row.innerHTML = "";
     // Fall back to other apps if none of the pinned ones are installed, so the row is never empty.
@@ -427,6 +516,8 @@
     refreshPrayers();
     refreshMetrics();
     setInterval(refreshMetrics, 5 * 60000);
+    refreshWeather();
+    setInterval(refreshWeather, 30 * 60000);
     if (params.has("nointro")) {
       document.body.classList.remove("intro-on");
       focusFirst();
@@ -454,6 +545,7 @@
       `font-weight="700" fill="#fff" text-anchor="middle">${label}</text></svg>`);
     const list = [
       ["com.stremio.one", "Stremio", "#5b2bb5", "#1b0d3d"],
+      ["org.smarttube.beta", "SmartTube", "#d4242a", "#3a0809"],
       ["com.amazon.firetv.youtube", "YouTube", "#c4302b", "#5c0d0b"],
       ["com.netflix.ninja", "Netflix", "#141414", "#5a0a0e"],
       ["com.amazon.firebat", "Prime Video", "#0f79af", "#06263d"],
@@ -476,15 +568,18 @@
     key, sample: true, hijri: "",
     timings: { Fajr: "05:28", Sunrise: "07:02", Dhuhr: "11:52", Maghrib: "16:59" }
   });
-  PreviewBridge.sampleMetrics = () => ({
-    updated: new Date().toISOString(),
-    metrics: [
-      { label: "Steps", value: 7420, target: 10000 },
-      { label: "Sleep", value: 6.8, unit: "h", target: 8 },
-      { label: "Qur'an", value: 4, unit: "pages", target: 5 },
-      { label: "Water", value: 1.6, unit: "L", target: 2.5 },
-      { label: "Prayers", value: 3, unit: "/ 5", target: 5 }
-    ]
-  });
+  PreviewBridge.sampleWeather = () => {
+    const now = new Date(), pad = (n) => String(n).padStart(2, "0");
+    const day = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+    const time = [...Array(48)].map((_, h) => `${day}T${pad(h % 24)}:00`);
+    const codes = [3, 3, 61, 61, 80, 3, 2, 2, 1, 0, 0, 0, 1, 2, 3, 61, 61, 63, 3, 2, 1, 0, 0, 0];
+    return {
+      current: { time: `${day}T${pad(now.getHours())}:00`, temperature_2m: 11.4, apparent_temperature: 8.6, weather_code: 61, wind_speed_10m: 14, is_day: 1 },
+      hourly: { time, temperature_2m: time.map((_, h) => 8 + 5 * Math.sin(((h % 24) - 8) / 24 * Math.PI * 2)),
+        weather_code: time.map((_, h) => codes[h % 24]), precipitation_probability: time.map((_, h) => [10, 20, 60, 70, 55, 30][h % 6]),
+        is_day: time.map((_, h) => (h % 24 >= 7 && h % 24 < 17 ? 1 : 0)) },
+      daily: { temperature_2m_max: [13], temperature_2m_min: [6], precipitation_probability_max: [70] }
+    };
+  };
   start();
 })();

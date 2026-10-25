@@ -14,6 +14,9 @@ window.HOME_CONFIG = {
   salahLogUrl: "https://salah-log.vercel.app/api/prayer-times?location=united-kingdom_manchester",
   prayer: { city: "Manchester", country: "United Kingdom", method: 0 },
 
+  // Weather from open-meteo.com (free, no key).
+  weather: { place: "Bolton", latitude: 53.5769, longitude: -2.4282 },
+
   // JSON feed of daily metrics from the Mac mini; see mac-mini/README.md for the format.
   // Example: "http://192.168.0.10:8787/tv/metrics.json"
   metricsUrl: "",
@@ -22,17 +25,18 @@ window.HOME_CONFIG = {
   // The apps row: these apps in this order, when installed. All apps shows everything else.
   pinnedApps: [
     "com.stremio.one", // Stremio
-    "com.teamsmart.videomanager.tv", // SmartTube (ad-free YouTube for TV); its package name has
-    "com.liskovsoft.smarttubetv.beta", // changed between releases, so any of these that is installed
-    "com.liskovsoft.smarttubetv", // shows up
+    "org.smarttube.stable", // SmartTube (ad-free YouTube for TV)
+    "org.smarttube.beta",
+    "label:SmartTube", // any app called SmartTube, in case its package name changes again
     "com.amazon.firetv.youtube", // YouTube on Fire TV
     "com.google.android.youtube.tv" // YouTube on other Android TV devices
   ],
   onlyPinnedApps: true, // false: fill the rest of the row with other installed apps
   // Leave an app out of the row when one of these is installed (SmartTube stands in for YouTube).
+  // Entries are package names, or "label:<name>" to match an app by the name it shows.
   replacedBy: {
-    "com.amazon.firetv.youtube": ["com.teamsmart.videomanager.tv", "com.liskovsoft.smarttubetv.beta", "com.liskovsoft.smarttubetv"],
-    "com.google.android.youtube.tv": ["com.teamsmart.videomanager.tv", "com.liskovsoft.smarttubetv.beta", "com.liskovsoft.smarttubetv"]
+    "com.amazon.firetv.youtube": ["label:SmartTube"],
+    "com.google.android.youtube.tv": ["label:SmartTube"]
   },
 
   // Web apps (for example from the Mac mini) opened full-screen on the TV; Back returns home.
