@@ -15,6 +15,7 @@ class HomeRedirectService : AccessibilityService() {
         if (event.eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) return
         val pkg = event.packageName?.toString() ?: return
         if (pkg !in STOCK_LAUNCHERS) return
+        if (HomePrefs.isRedirectPaused(this)) return // the user asked for the Fire TV home screen
         startActivity(
             Intent(this, MainActivity::class.java)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)

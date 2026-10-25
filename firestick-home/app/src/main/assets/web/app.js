@@ -252,6 +252,8 @@
     grid: `<svg viewBox="0 0 64 64"><rect x="8" y="8" width="18" height="18"/><rect x="38" y="8" width="18" height="18"/><rect x="8" y="38" width="18" height="18"/><rect x="38" y="38" width="18" height="18"/></svg>`,
     theme: `<svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="22"/><path d="M32 10 A22 22 0 0 1 32 54 Z" fill="currentColor"/></svg>`,
     replay: `<svg viewBox="0 0 64 64"><path d="M14 32 A18 18 0 1 0 20 18"/><path d="M12 10 L20 18 L10 22"/></svg>`,
+    firetv: `<svg viewBox="0 0 64 64"><rect x="8" y="14" width="48" height="30" rx="3"/><path d="M24 54h16M32 44v10"/></svg>`,
+    pin: `<svg viewBox="0 0 64 64"><path d="M10 30 L32 12 L54 30"/><path d="M16 26v26h32V26"/><path d="M27 52V38h10v14"/></svg>`,
     settings: `<svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="9"/><path d="M32 6v10M32 48v10M6 32h10M48 32h10M13.6 13.6l7 7M43.4 43.4l7 7M13.6 50.4l7-7M43.4 20.6l7-7"/></svg>`
   };
 
@@ -298,6 +300,17 @@
     row.appendChild(utilTile("grid", "All apps", openDrawer));
     row.appendChild(utilTile("theme", "Theme", switchTheme));
     row.appendChild(utilTile("replay", "Replay intro", playIntro));
+    row.appendChild(utilTile("firetv", "Fire TV home", () => {
+      if (native.openFireTvHome()) toast("Open Welcome Home from your apps to come back");
+      else toast("Couldn't find the Fire TV home screen");
+    }));
+    if (onDevice && !native.isHomeRedirectOn()) {
+      // The Home-button switch is off, so Home and start-up still go to Amazon's screen.
+      row.appendChild(utilTile("pin", "Make this my home", () => {
+        if (!native.openAccessibilitySettings()) toast("See the README: switch it on with ADB from the Mac mini");
+        else toast("Switch on “Welcome Home: Home button”");
+      }));
+    }
     row.appendChild(utilTile("settings", "Settings", () => native.openSettings()));
   }
 
@@ -423,6 +436,9 @@
       getApps: () => JSON.stringify(list.map(([pkg, label, c1, c2]) => ({ pkg, label, banner: true, icon: art(label, c1, c2) }))),
       launch: (pkg) => { toast("Would open " + pkg); return true; },
       openSettings: () => toast("Would open Fire TV settings"),
+      openFireTvHome: () => true,
+      isHomeRedirectOn: () => true,
+      openAccessibilitySettings: () => true,
       fetch: () => {}
     };
   }

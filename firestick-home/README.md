@@ -53,6 +53,12 @@ a button mapper, append it with a `:` separator.
 Turn off ADB debugging when you're done. An open ADB port on the Wi-Fi gives full control of the Fire Stick
 to anything on the network.
 
+With the switch on, Welcome Home also comes up when the Fire Stick starts. Until it is on, the apps row shows
+a **Make this my home** tile that opens the accessibility settings.
+
+To use Amazon's home screen for a while, pick the **Fire TV home** tile. The Home button then goes to Amazon's
+screen until you open Welcome Home again from your apps, or restart the Fire Stick.
+
 ## Settings
 
 Defaults live in [`app/src/main/assets/web/config.js`](app/src/main/assets/web/config.js): name, theme,

@@ -45,6 +45,7 @@ class MainActivity : Activity() {
 
     override fun onResume() {
         super.onResume()
+        HomePrefs.setRedirectPaused(this, false) // back on Welcome Home, so Home leads here again
         web.onResume()
         web.resumeTimers()
         js("window.onHomeResume && onHomeResume()")

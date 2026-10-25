@@ -1,5 +1,6 @@
 package com.seedy6.welcome
 
+import android.content.ComponentName
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Canvas
@@ -49,6 +50,34 @@ class Bridge(private val activity: MainActivity) {
         return true
     }
 
+    /** Go to Amazon's own home screen, pausing the Home-button redirect until Welcome Home is opened again. */
+    @JavascriptInterface
+    fun openFireTvHome(): Boolean {
+        val intent = STOCK_LAUNCHERS.asSequence()
+            .map { Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME).setPackage(it) }
+            .firstOrNull { pm.resolveActivity(it, 0) != null }
+            ?: return false
+        HomePrefs.setRedirectPaused(activity, true)
+        activity.runOnUiThread { activity.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
+        return true
+    }
+
+    /** True when the accessibility service that sends the Home button here is switched on. */
+    @JavascriptInterface
+    fun isHomeRedirectOn(): Boolean {
+        val enabled = Settings.Secure.getString(activity.contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES) ?: ""
+        val service = ComponentName(activity, HomeRedirectService::class.java)
+        return enabled.split(':').any { ComponentName.unflattenFromString(it) == service }
+    }
+
+    @JavascriptInterface
+    fun openAccessibilitySettings(): Boolean {
+        val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        if (pm.resolveActivity(intent, 0) == null) return false
+        activity.runOnUiThread { activity.startActivity(intent) }
+        return true
+    }
+
     @JavascriptInterface
     fun openSettings() {
         activity.runOnUiThread {
@@ -82,6 +111,10 @@ class Bridge(private val activity: MainActivity) {
     }
 
     fun shutdown() = pool.shutdownNow()
+
+    private companion object {
+        val STOCK_LAUNCHERS = listOf("com.amazon.tv.launcher", "com.amazon.firehomestarter")
+    }
 
     private fun toDataUrl(drawable: Drawable, isBanner: Boolean): String {
         val (w, h) = if (isBanner) 320 to 180 else 160 to 160
