@@ -3,6 +3,7 @@
 @font-face { font-family: "Orbitron"; font-weight: 900; src: url(fonts/orbitron-latin-900-normal.woff2) format("woff2"); }
 @font-face { font-family: "Rajdhani"; font-weight: 600; src: url(fonts/rajdhani-latin-600-normal.woff2) format("woff2"); }
 @font-face { font-family: "Rajdhani"; font-weight: 700; src: url(fonts/rajdhani-latin-700-normal.woff2) format("woff2"); }
+@font-face { font-family: "Feng Wei Brush"; src: url(fonts/ma-shan-zheng-fengwei.woff2) format("woff2"); } /* only 冯威 */
 @font-face { font-family: "Bebas Neue"; font-weight: 400; src: url(fonts/bebas-neue-latin-400-normal.woff2) format("woff2"); }
 
 :root, [data-theme="fengwei"] {
@@ -233,7 +234,7 @@ body.intro-on #home { opacity: 0; transform: translateY(18px); }
 .intro.fengwei .b2 { stroke: #e0302a; stroke-width: 26; opacity: 0.9; }
 .intro.fengwei.go .brush { transition: stroke-dashoffset 0.34s cubic-bezier(.7,0,.3,1); stroke-dashoffset: 0; }
 .intro.fengwei.go .b2 { transition-delay: 0.06s; }
-.intro.fengwei .kanji { position: absolute; font-size: 560px; line-height: 1; color: rgba(242, 184, 75, 0.0); font-weight: 900; transform: scale(1.25); transition: all 1.1s ease-out; letter-spacing: -0.05em; }
+.intro.fengwei .kanji { position: absolute; font-family: "Feng Wei Brush", serif; font-size: 560px; line-height: 1; color: rgba(242, 184, 75, 0.0); font-weight: 900; transform: scale(1.25); transition: all 1.1s ease-out; letter-spacing: -0.05em; }
 .intro.fengwei.ink .kanji { color: rgba(242, 184, 75, 0.09); transform: scale(1); }
 .intro.fengwei .t1, .intro.fengwei .t2 { font-family: var(--display); text-transform: uppercase; opacity: 0; transform: scale(2.8); }
 .intro.fengwei .t1 { font-size: 120px; letter-spacing: 0.32em; padding-left: 0.32em; color: var(--text); }
@@ -304,19 +305,35 @@ body.intro-on #home { opacity: 0; transform: translateY(18px); }
 .intro.versus .hud span + span { color: rgba(255, 210, 140, 0.85); }
 .intro.versus.in-left .hud { opacity: 1; }
 
-.intro.versus .right .side-bg { position: absolute; top: 0; right: 0; bottom: 0; left: 0;
-  background: radial-gradient(640px 700px at 70% 52%, rgba(190, 30, 20, 0.32), transparent 70%), linear-gradient(245deg, #120303, #020101 70%); }
-.intro.versus .smoke i { position: absolute; width: 900px; height: 600px; border-radius: 50%; opacity: 0.55;
-  background: radial-gradient(closest-side, rgba(150, 25, 18, 0.55), transparent); animation: drift 9s ease-in-out infinite alternate; }
-.intro.versus .smoke i:nth-child(1) { left: 1000px; top: 120px; }
-.intro.versus .smoke i:nth-child(2) { left: 1250px; top: 520px; animation-duration: 11s; animation-delay: -3s; }
-.intro.versus .smoke i:nth-child(3) { left: 1500px; top: -100px; animation-duration: 13s; animation-delay: -6s; opacity: 0.35; }
-.intro.versus .right .kanji { position: absolute; right: 70px; top: 90px; font-size: 380px; line-height: 1; font-weight: 300; color: rgba(255, 120, 80, 0.06); letter-spacing: -0.04em; }
-.intro.versus .fighter { position: absolute; right: 70px; bottom: -30px; height: 920px; transform-origin: 40% 30%; filter: drop-shadow(0 0 18px rgba(255, 61, 36, 0.45)); }
-.intro.versus.in-right .fighter { animation: push 7s cubic-bezier(.2,.6,.3,1) forwards; }
-.intro.versus .fighter .palm { opacity: 0; transform-origin: 112px 200px; transition: opacity 0.4s ease; }
-.intro.versus.palm .fighter .palm { opacity: 1; animation: pulse 1.6s ease-in-out infinite alternate; }
-
+.intro.versus .right { background: #030000; }
+.intro.versus .right img { position: absolute; display: block; }
+.intro.versus .ink-bg { left: 880px; top: 0; width: 1040px; height: 1080px; opacity: 0; transform: scale(1.12); transform-origin: 60% 45%;
+  transition: opacity 1.2s ease, transform 6s cubic-bezier(.2,.6,.3,1); }
+.intro.versus.in-right .ink-bg { opacity: 1; transform: scale(1); }
+.intro.versus .ink-stroke { left: 880px; top: 364px; width: 1040px; height: 593px; clip-path: inset(0 100% 0 0);
+  transition: clip-path 0.45s cubic-bezier(.7,0,.2,1); }
+.intro.versus.brush .ink-stroke { clip-path: inset(0 0 0 0); }
+.intro.versus .ink-chars { left: 1011px; top: 250px; width: 901px; height: 480px; opacity: 0; transform: scale(1.12); transform-origin: 50% 60%;
+  transition: opacity 0.7s ease, transform 2.4s cubic-bezier(.16,1,.3,1); }
+.intro.versus.ink .ink-chars { opacity: 1; transform: scale(1); }
+.intro.versus .ink-seal { left: 1758px; top: 119px; width: 107px; height: 152px; opacity: 0; transform: scale(1.8) rotate(-6deg); }
+.intro.versus.seal .ink-seal { opacity: 1; transform: scale(1) rotate(0); transition: transform 0.16s cubic-bezier(.2,1.3,.4,1), opacity 0.1s; }
+.intro.versus .embers i { position: absolute; bottom: -20px; width: 4px; height: 4px; border-radius: 50%; background: #ffb050;
+  box-shadow: 0 0 8px 2px rgba(255, 110, 40, 0.8); opacity: 0; animation: ember 4.5s linear infinite; }
+.intro.versus .embers i:nth-child(1) { left: 1000px; animation-delay: 0.00s; animation-duration: 3.60s; }
+.intro.versus .embers i:nth-child(2) { left: 1067px; animation-delay: 4.13s; animation-duration: 4.05s; }
+.intro.versus .embers i:nth-child(3) { left: 1134px; animation-delay: 3.76s; animation-duration: 4.50s; }
+.intro.versus .embers i:nth-child(4) { left: 1201px; animation-delay: 3.39s; animation-duration: 4.95s; }
+.intro.versus .embers i:nth-child(5) { left: 1268px; animation-delay: 3.02s; animation-duration: 5.40s; }
+.intro.versus .embers i:nth-child(6) { left: 1335px; animation-delay: 2.65s; animation-duration: 3.60s; }
+.intro.versus .embers i:nth-child(7) { left: 1402px; animation-delay: 2.28s; animation-duration: 4.05s; }
+.intro.versus .embers i:nth-child(8) { left: 1469px; animation-delay: 1.91s; animation-duration: 4.50s; }
+.intro.versus .embers i:nth-child(9) { left: 1536px; animation-delay: 1.54s; animation-duration: 4.95s; }
+.intro.versus .embers i:nth-child(10) { left: 1603px; animation-delay: 1.17s; animation-duration: 5.40s; }
+.intro.versus .embers i:nth-child(11) { left: 1670px; animation-delay: 0.80s; animation-duration: 3.60s; }
+.intro.versus .embers i:nth-child(12) { left: 1737px; animation-delay: 0.43s; animation-duration: 4.05s; }
+.intro.versus .embers i:nth-child(13) { left: 1804px; animation-delay: 0.06s; animation-duration: 4.50s; }
+.intro.versus .embers i:nth-child(14) { left: 1871px; animation-delay: 4.19s; animation-duration: 4.95s; }
 .intro.versus .tag { position: absolute; bottom: 210px; z-index: 1; font-family: "Orbitron", sans-serif; font-weight: 400; font-size: 46px;
   text-transform: uppercase; letter-spacing: 0.9em; opacity: 0; transition: opacity 0.9s ease 0.5s, letter-spacing 1.4s cubic-bezier(.16,1,.3,1) 0.4s; }
 .intro.versus .left .tag { left: 110px; color: #e8fbff; text-shadow: 0 0 18px rgba(80, 210, 255, 0.7); }
@@ -372,5 +389,5 @@ body.intro-on #home { opacity: 0; transform: translateY(18px); }
 @keyframes drift { from { transform: translate(0, 0) scale(1); } to { transform: translate(-120px, -60px) scale(1.15); } }
 @keyframes grain { 0% { transform: translate(0, 0); } 25% { transform: translate(-31px, 17px); } 50% { transform: translate(23px, -29px); } 75% { transform: translate(-13px, -41px); } 100% { transform: translate(37px, 11px); } }
 @keyframes flash2 { 0% { opacity: 0.55; } 100% { opacity: 0; } }
-@keyframes pulse { from { transform: scale(0.85); } to { transform: scale(1.2); } }
+@keyframes ember { 0% { opacity: 0; transform: translate(0, 0); } 15% { opacity: 0.9; } 100% { opacity: 0; transform: translate(-60px, -900px); } }
 @keyframes push { from { transform: scale(1); } to { transform: scale(1.06); } }

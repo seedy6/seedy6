@@ -1,0 +1,71 @@
+<!doctype html>
+<!-- Source for the Feng Wei ink artwork in app/src/main/assets/web/art. Render each layer with
+     render-art.js (?layer=bg|chars|stroke|seal); the app animates the layers separately. -->
+<html><head><meta charset="utf-8"><style>
+@font-face{font-family:MSZ;src:url(../app/src/main/assets/web/fonts/ma-shan-zheng-fengwei.woff2)}
+html,body{margin:0;background:transparent;width:1040px;height:1080px;overflow:hidden}
+svg{position:absolute;inset:0;width:1040px;height:1080px}
+</style></head><body>
+<svg viewBox="0 0 1040 1080">
+<defs>
+  <radialGradient id="back" cx="58%" cy="44%" r="55%"><stop offset="0" stop-color="#5c0806"/><stop offset=".45" stop-color="#230303"/><stop offset="1" stop-color="#030000"/></radialGradient>
+  <filter id="smokeF" x="0" y="0" width="100%" height="100%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.0035 0.006" numOctaves="5" seed="11"/>
+    <feColorMatrix type="matrix" values="0 0 0 0 0.55  0 0 0 0 0.04  0 0 0 0 0.02  0 0 0 1.6 -0.75"/>
+  </filter>
+  <filter id="dry" x="-10%" y="-20%" width="120%" height="140%"><feTurbulence type="fractalNoise" baseFrequency="0.006 0.11" numOctaves="3" seed="4"/><feDisplacementMap in="SourceGraphic" scale="42"/></filter>
+  <filter id="bristle" x="-10%" y="-20%" width="120%" height="140%"><feTurbulence type="fractalNoise" baseFrequency="0.004 0.35" numOctaves="2" seed="7"/><feDisplacementMap in="SourceGraphic" scale="26"/></filter>
+  <filter id="glow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="22"/></filter>
+  <filter id="soft"><feGaussianBlur stdDeviation="3"/></filter>
+  <filter id="inkbleed"><feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="2" seed="2"/><feDisplacementMap in="SourceGraphic" scale="5"/></filter>
+  <filter id="sealTexture"><feTurbulence type="fractalNoise" baseFrequency="0.09" numOctaves="2" seed="5"/><feDisplacementMap in="SourceGraphic" scale="6"/></filter>
+  <linearGradient id="body" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#3a0302" stop-opacity="0"/><stop offset=".18" stop-color="#7d0805"/><stop offset=".55" stop-color="#c3120b"/><stop offset=".85" stop-color="#e2261a"/><stop offset="1" stop-color="#ff4a2a"/></linearGradient>
+  <linearGradient id="core" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#ff5a2a" stop-opacity="0"/><stop offset=".4" stop-color="#ff6a2a"/><stop offset=".8" stop-color="#ffb54a"/><stop offset="1" stop-color="#ffe3a0"/></linearGradient>
+  <linearGradient id="charRim" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffd38a"/><stop offset=".5" stop-color="#ff3a1e"/><stop offset="1" stop-color="#6a0603"/></linearGradient>
+</defs>
+<g id="bg">
+<rect width="1040" height="1080" fill="url(#back)"/>
+<rect width="1040" height="1080" filter="url(#smokeF)" opacity=".85"/>
+<!-- backlight behind the characters -->
+<ellipse cx="560" cy="470" rx="380" ry="300" fill="#ff2a14" opacity=".22" filter="url(#glow)"/>
+<g id="specks"></g>
+</g>
+<!-- calligraphy: rim-lit copy behind, black ink in front -->
+<g id="chars">
+<g font-family="MSZ" font-size="430" text-anchor="middle">
+  <text x="560" y="640" fill="none" stroke="url(#charRim)" stroke-width="10" filter="url(#glow)" opacity=".9">冯威</text>
+  <text x="560" y="640" fill="none" stroke="url(#charRim)" stroke-width="5" opacity=".95">冯威</text>
+  <text x="560" y="640" fill="#060101" filter="url(#inkbleed)">冯威</text>
+</g>
+</g>
+<!-- the brush stroke: glow, wide body, dry bristles, molten core -->
+<g id="stroke" transform="translate(0 40)">
+  <path d="M10 830 C 260 650 560 560 1040 360 L 1040 420 C 600 590 330 700 70 880 Z" fill="#ff2a10" opacity=".35" filter="url(#glow)"/>
+  <g filter="url(#dry)"><path d="M10 830 C 260 650 560 560 1040 360 C 1050 400 1040 420 1010 432 C 600 590 330 700 70 880 Z" fill="url(#body)"/></g>
+  <g filter="url(#bristle)" fill="none" stroke-linecap="round">
+    <path d="M60 860 C 320 700 600 600 1030 420" stroke="#ff4a24" stroke-width="3" opacity=".7"/>
+    <path d="M110 880 C 360 730 640 620 1030 440" stroke="#9a0a06" stroke-width="5" opacity=".8"/>
+    <path d="M30 820 C 280 660 580 570 1030 380" stroke="#ff8a3a" stroke-width="2" opacity=".6"/>
+  </g>
+  <g filter="url(#bristle)"><path d="M200 760 C 420 640 650 560 1040 380" stroke="url(#core)" stroke-width="7" fill="none" stroke-linecap="round" opacity=".95"/></g>
+  <path d="M200 760 C 420 640 650 560 1040 380" stroke="#ffd27a" stroke-width="16" fill="none" opacity=".35" filter="url(#glow)"/>
+</g>
+<!-- carved seal: white characters cut out of red -->
+<g id="seal" transform="translate(880 120)" filter="url(#sealTexture)">
+  <rect width="104" height="150" rx="6" fill="#b5110a"/>
+  <rect x="7" y="7" width="90" height="136" rx="3" fill="none" stroke="#f3e2c6" stroke-width="3" opacity=".85"/>
+  <g font-family="MSZ" font-size="62" fill="#f3e2c6" text-anchor="middle"><text x="52" y="70">冯</text><text x="52" y="132">威</text></g>
+</g>
+</svg>
+<script>
+let r = 1; const rnd = () => (r = (r * 16807) % 2147483647) / 2147483647;
+let h = '';
+for (let i = 0; i < 70; i++) {
+  const x = 60 + rnd() * 960, y = 160 + rnd() * 800, s = rnd();
+  if (s < 0.35) h += `<rect x="${x}" y="${y}" width="${2 + rnd() * 7}" height="${2 + rnd() * 5}" transform="rotate(${rnd() * 90} ${x} ${y})" fill="#f5c76a" opacity="${0.35 + rnd() * 0.6}"/>`;
+  else h += `<line x1="${x}" y1="${y}" x2="${x + 6 + rnd() * 14}" y2="${y - 10 - rnd() * 26}" stroke="${rnd() < .5 ? '#ff7a2e' : '#ffb24a'}" stroke-width="${1 + rnd() * 2.2}" stroke-linecap="round" opacity="${0.3 + rnd() * 0.7}"/>`;
+}
+document.getElementById('specks').innerHTML = h;
+const layer = new URLSearchParams(location.search).get('layer');
+if (layer) ['bg', 'chars', 'stroke', 'seal'].forEach((id) => { if (id !== layer) document.getElementById(id).remove(); });
+</script></body></html>

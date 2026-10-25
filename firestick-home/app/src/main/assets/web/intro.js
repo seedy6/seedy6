@@ -29,8 +29,8 @@ const Intro = (() => {
     root.classList.add("shake");
   }
 
-  // Original artwork, kept abstract: a wireframe Spartan helmet with only its visor lit,
-  // and a kenpo fighter drawn purely as rim light coming out of the dark.
+  // Original artwork, kept abstract: a wireframe Spartan helmet with only its visor lit.
+  // Feng Wei's side is brush calligraphy, pre-rendered from art/fengwei-ink.html into web/art.
   const HELMET_FACETS = "M300 56 L 218 68 L 156 116 L 126 196 L 124 288 L 116 384 L 160 446 L 204 424 " +
     "L 216 448 L 300 480 L 384 448 L 396 424 L 440 446 L 484 384 L 476 288 L 474 196 L 444 116 L 382 68 Z " +
     "M300 56 L 300 220 M218 68 L 182 120 L 148 236 M382 68 L 418 120 L 452 236 M124 288 L 168 350 L 204 424 " +
@@ -51,34 +51,6 @@ const Intro = (() => {
       <path class="visor" fill="url(#visor)" d="M148 236 L 300 220 L 452 236 L 466 296 L 432 350 L 300 372 L 168 350 L 134 296 Z"/>
       <path fill="#fff6dc" fill-opacity="0.75" d="M160 246 L 300 231 L 392 236 L 300 240 L 176 256 Z"/>
       <g clip-path="url(#visorClip)"><rect class="gleam" x="-260" y="180" width="90" height="240" fill="url(#gleam)" transform="skewX(-28)"/></g>
-    </svg>`;
-
-  const FIGHTER_PATHS = `
-        <path d="M380 128 C 376 96 400 80 424 82 C 438 76 452 80 462 88 C 468 100 466 112 464 120 C 466 146 458 168 438 178 C 412 186 384 168 380 128 Z"/>
-        <path d="M402 168 L 438 168 L 444 204 L 396 204 Z"/>
-        <path d="M352 206 C 384 190 472 190 494 210 C 504 262 492 332 474 398 L 360 404 C 350 340 344 270 352 206 Z"/>
-        <path d="M364 214 C 320 220 270 226 230 228 C 180 230 132 222 104 212 L 96 238 C 134 252 186 260 236 260 C 286 260 332 254 368 250 Z"/>
-        <path d="M104 214 L 86 166 L 99 162 L 108 194 L 106 152 L 119 151 L 120 192 L 130 156 L 143 160 L 130 210 L 132 238 L 96 242 Z"/>
-        <path d="M480 214 C 522 230 544 280 534 330 C 528 362 502 386 472 394 L 452 372 C 478 360 496 340 500 314 C 503 280 490 254 468 244 Z"/>
-        <circle cx="460" cy="384" r="24"/>
-        <path d="M352 396 L 480 402 L 490 456 L 342 460 Z"/>
-        <path d="M346 436 C 300 500 252 562 240 640 C 234 700 238 750 232 788 L 168 798 L 172 778 L 202 768 C 198 700 198 640 212 580 C 232 510 272 462 304 432 Z"/>
-        <path d="M418 436 L 488 444 C 532 522 582 622 640 760 L 664 792 L 600 798 C 570 722 520 622 448 532 Z"/>`;
-
-  // The outline is the stroke peeking out from under an identical black fill, so only the outer edge shows.
-  const FIGHTER_SVG = `
-    <svg class="fighter" viewBox="0 0 700 820" aria-hidden="true">
-      <defs>
-        <linearGradient id="rim" x1="0" y1="0" x2="1" y2="0.3"><stop offset="0" stop-color="#ffb070"/><stop offset="0.35" stop-color="#ff3d24"/><stop offset="1" stop-color="#ff3d24" stop-opacity="0.15"/></linearGradient>
-        <linearGradient id="fade" x1="0" y1="0" x2="0" y2="1"><stop offset="0.55" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
-        <mask id="fadeMask"><rect width="700" height="820" fill="url(#fade)"/></mask>
-      </defs>
-      <g mask="url(#fadeMask)">
-        <g fill="none" stroke="url(#rim)" stroke-width="7" stroke-linejoin="round">${FIGHTER_PATHS}</g>
-        <g fill="#050202">${FIGHTER_PATHS}</g>
-      </g>
-      <circle class="palm" cx="112" cy="200" r="46" fill="url(#palmGlow)"/>
-      <radialGradient id="palmGlow"><stop offset="0" stop-color="#fff1d0"/><stop offset="0.3" stop-color="#ff9a3c" stop-opacity="0.8"/><stop offset="1" stop-color="#ff3d24" stop-opacity="0"/></radialGradient>
     </svg>`;
 
   let grainUrl = null;
@@ -161,10 +133,11 @@ const Intro = (() => {
           <div class="tag">Spartan</div>
         </div>
         <div class="side right">
-          <div class="side-bg"></div>
-          <div class="smoke"><i></i><i></i><i></i></div>
-          <div class="kanji" aria-hidden="true">冯威</div>
-          ${FIGHTER_SVG}
+          <img class="ink-bg" src="art/fengwei-bg.webp" alt="">
+          <img class="ink-chars" src="art/fengwei-chars.webp" alt="">
+          <img class="ink-stroke" src="art/fengwei-stroke.webp" alt="">
+          <img class="ink-seal" src="art/fengwei-seal.webp" alt="">
+          <div class="embers">${"<i></i>".repeat(14)}</div>
           <div class="tag">Feng Wei</div>
         </div>
         <svg class="seam" viewBox="0 0 1920 1080" preserveAspectRatio="none" aria-hidden="true"><line x1="1080" y1="0" x2="880" y2="1080"/></svg>
@@ -179,7 +152,9 @@ const Intro = (() => {
       at(300, () => { root.classList.add("in-left"); Sfx.whooshDeep({ dur: 1.1, pan: -0.9, pan2: -0.2 }); });
       at(1000, () => { root.classList.add("visor"); Sfx.metal(-0.4); });
       at(1300, () => { root.classList.add("in-right"); Sfx.whooshDeep({ dur: 1.1, pan: 0.9, pan2: 0.2 }); });
-      at(1900, () => { root.classList.add("palm"); Sfx.drum(0.4); });
+      at(1500, () => { root.classList.add("brush"); Sfx.whooshDeep({ dur: 0.55, pan: -0.1, pan2: 0.8, peak: 0.4 }); });
+      at(1850, () => { root.classList.add("ink"); Sfx.drum(0.4); });
+      at(2150, () => { root.classList.add("seal"); Sfx.drum(0.6); Sfx.metal(0.6); });
       at(1600, () => Sfx.riser(0.85));
       at(2450, () => { root.classList.add("clash"); Sfx.boom(1.1); Sfx.braam(); shake(root); });
       at(3050, () => { root.classList.add("hit1"); Sfx.whooshDeep({ dur: 0.8, peak: 0.35 }); });
