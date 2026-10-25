@@ -22,6 +22,9 @@ window.HOME_CONFIG = {
   // The apps row: these apps in this order, when installed. All apps shows everything else.
   pinnedApps: [
     "com.stremio.one", // Stremio
+    "com.teamsmart.videomanager.tv", // SmartTube (ad-free YouTube for TV); its package name has
+    "com.liskovsoft.smarttubetv.beta", // changed between releases, so any of these that is installed
+    "com.liskovsoft.smarttubetv", // shows up
     "com.amazon.firetv.youtube", // YouTube on Fire TV
     "com.google.android.youtube.tv" // YouTube on other Android TV devices
   ],
