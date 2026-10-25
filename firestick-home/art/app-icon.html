@@ -1,0 +1,60 @@
+<!doctype html>
+<!-- Source for the app's Fire TV banner and icon. Render with render-icons.js; the PNGs go in res/. -->
+<html><head><meta charset="utf-8"><style>
+@font-face { font-family: Orbitron; font-weight: 700; src: url(../app/src/main/assets/web/fonts/orbitron-latin-700-normal.woff2); }
+@font-face { font-family: Orbitron; font-weight: 400; src: url(../app/src/main/assets/web/fonts/orbitron-latin-400-normal.woff2); }
+html, body { margin: 0; background: transparent; }
+.banner { position: relative; width: 640px; height: 360px; overflow: hidden; background: #020305; }
+.banner .l { position: absolute; inset: 0; clip-path: polygon(0 0, 380px 0, 300px 100%, 0 100%);
+  background: radial-gradient(260px 200px at 34% 46%, rgba(70, 200, 255, .26), transparent 70%), linear-gradient(115deg, #04192a, #010407 75%); }
+.banner .r { position: absolute; inset: 0; clip-path: polygon(380px 0, 100% 0, 100% 100%, 300px 100%);
+  background: url(../app/src/main/assets/web/art/fengwei-bg.webp) 62% 46% / 820px auto no-repeat; }
+.banner .chars { position: absolute; left: 318px; top: 64px; width: 330px; filter: drop-shadow(0 0 10px rgba(255, 60, 30, .5)); }
+.banner .l { z-index: 1; }
+.banner .vig { z-index: 2; }
+.banner .seam, .banner .name { z-index: 3; }
+.banner .stroke { position: absolute; left: 252px; top: 150px; width: 420px; opacity: .95; }
+.banner .helm { position: absolute; left: 20px; top: -30px; height: 470px; }
+.banner .seam { position: absolute; left: 338px; top: -10px; width: 3px; height: 390px; background: #fff6e8; transform: rotate(12.5deg);
+  box-shadow: 0 0 8px 2px #fff, 0 0 26px 6px rgba(255, 179, 102, .8); }
+.banner .name { position: absolute; left: 0; right: 0; bottom: 26px; text-align: center; text-transform: uppercase; font: 700 28px Orbitron, sans-serif; letter-spacing: .38em; padding-left: .38em;
+  color: #f4f8fa; text-shadow: -2px 0 rgba(53, 224, 255, .7), 2px 0 rgba(255, 60, 40, .7), 0 0 18px rgba(0, 0, 0, .9); }
+.banner .vig { position: absolute; inset: 0; background: radial-gradient(520px 300px at 50% 45%, transparent 55%, rgba(0, 0, 0, .7)); }
+
+.icon { position: relative; width: 192px; height: 192px; overflow: hidden; border-radius: 0;
+  background: radial-gradient(120px 100px at 50% 44%, rgba(70, 200, 255, .22), transparent 70%), linear-gradient(135deg, #04192a, #020305 70%); }
+.icon .helm { position: absolute; left: 6px; top: -8px; height: 236px; }
+.icon .seal { position: absolute; right: 12px; bottom: 12px; width: 40px; }
+.icon .edge { position: absolute; inset: 0; box-shadow: inset 0 0 0 2px rgba(255, 90, 60, .55); }
+</style></head><body>
+<svg width="0" height="0" style="position:absolute"><defs>
+  <linearGradient id="visor" x1="0" y1="0" x2="0.85" y2="1"><stop offset="0" stop-color="#ffe6a3"/><stop offset="0.28" stop-color="#e79a2c"/><stop offset="0.62" stop-color="#6e2f06"/><stop offset="1" stop-color="#120601"/></linearGradient>
+  <linearGradient id="wire" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7fe9ff" stop-opacity="0.3"/><stop offset="0.6" stop-color="#7fe9ff" stop-opacity="0.75"/><stop offset="1" stop-color="#7fe9ff"/></linearGradient>
+  <filter id="glow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="9" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+</defs></svg>
+<template id="helm"><svg class="helm" viewBox="0 0 600 700">
+  <path fill="none" stroke="url(#wire)" stroke-width="WIRE" stroke-linejoin="round" d="M300 56 L 218 68 L 156 116 L 126 196 L 124 288 L 116 384 L 160 446 L 204 424 L 216 448 L 300 480 L 384 448 L 396 424 L 440 446 L 484 384 L 476 288 L 474 196 L 444 116 L 382 68 Z M300 56 L 300 220 M218 68 L 182 120 L 148 236 M382 68 L 418 120 L 452 236 M124 288 L 168 350 L 204 424 M476 288 L 432 350 L 396 424 M200 356 L 216 448 M400 356 L 384 448 M300 376 L 300 480 M98 318 L 124 304 M98 318 L 102 380 L 116 384 M502 318 L 476 304 M502 318 L 498 380 L 484 384 M246 452 L 228 528 M354 452 L 372 528 M228 528 L 372 528 M196 492 L 92 520 L 34 590 L 20 700 M404 492 L 508 520 L 566 590 L 580 700 M196 492 L 236 520 L 222 700 M404 492 L 364 520 L 378 700"/>
+  <path fill="url(#visor)" filter="url(#glow)" d="M148 236 L 300 220 L 452 236 L 466 296 L 432 350 L 300 372 L 168 350 L 134 296 Z"/>
+  <path fill="#fff6dc" fill-opacity="0.8" d="M160 246 L 300 231 L 392 236 L 300 240 L 176 256 Z"/>
+</svg></template>
+
+<div class="banner" id="banner">
+  <div class="l"><div class="slot-helm" data-wire="3"></div></div><div class="r"></div>
+  <img class="stroke" src="../app/src/main/assets/web/art/fengwei-stroke.webp">
+  <img class="chars" src="../app/src/main/assets/web/art/fengwei-chars.webp">
+  <div class="seam"></div>
+  <div class="vig"></div>
+  <div class="name">Welcome</div>
+</div>
+<div style="height:20px"></div>
+<div class="icon" id="icon">
+  <div class="slot-helm" data-wire="5"></div>
+  <img class="seal" src="../app/src/main/assets/web/art/fengwei-seal.webp">
+  <div class="edge"></div>
+</div>
+<script>
+  for (const slot of document.querySelectorAll(".slot-helm")) {
+    slot.outerHTML = document.getElementById("helm").innerHTML.replace("WIRE", slot.dataset.wire);
+  }
+</script>
+</body></html>
