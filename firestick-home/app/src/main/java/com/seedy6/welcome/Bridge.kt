@@ -12,6 +12,8 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.io.ByteArrayOutputStream
 import java.net.HttpURLConnection
+import java.net.Inet4Address
+import java.net.NetworkInterface
 import java.net.URL
 import java.util.concurrent.Executors
 
@@ -69,6 +71,14 @@ class Bridge(private val activity: MainActivity) {
         val service = ComponentName(activity, HomeRedirectService::class.java)
         return enabled.split(':').any { ComponentName.unflattenFromString(it) == service }
     }
+
+    /** The Fire Stick's address on the home Wi-Fi (for connecting with ADB), or "" if offline. */
+    @JavascriptInterface
+    fun deviceAddress(): String = NetworkInterface.getNetworkInterfaces().toList()
+        .filter { it.isUp && !it.isLoopback }
+        .flatMap { it.inetAddresses.toList() }
+        .firstOrNull { it is Inet4Address && it.isSiteLocalAddress }
+        ?.hostAddress ?: ""
 
     @JavascriptInterface
     fun openAccessibilitySettings(): Boolean {

@@ -97,6 +97,7 @@
   };
   window.onBackKey = () => {
     if (Intro.playing) Intro.skip();
+    else if (!$("homeSetup").hidden) { $("homeSetup").hidden = true; focusFirst(); }
     else if (!$("webApp").hidden) closeWebApp();
     else if (!$("drawer").hidden) closeDrawer();
   };
@@ -431,10 +432,7 @@
     }));
     if (onDevice && !native.isHomeRedirectOn()) {
       // The Home-button switch is off, so Home and start-up still go to Amazon's screen.
-      row.appendChild(utilTile("pin", "Make this my home", () => {
-        if (!native.openAccessibilitySettings()) toast("See the README: switch it on with ADB from the Mac mini");
-        else toast("Switch on “Welcome Home: Home button”");
-      }));
+      row.appendChild(utilTile("pin", "Make this my home", openHomeSetup));
     }
     if (typeof native.checkForUpdates === "function") {
       row.appendChild(utilTile("refresh", "Check for updates", () => {
@@ -459,7 +457,15 @@
   }
 
   document.querySelector(".drawer-title").onclick = () => closeDrawer();
+  $("homeSetup").onclick = () => { $("homeSetup").hidden = true; focusFirst(); };
   $("intro").onclick = () => Intro.playing && Intro.skip();
+
+  // Fire TV hides third-party accessibility switches, so show how to turn it on with ADB instead.
+  function openHomeSetup() {
+    const address = typeof native.deviceAddress === "function" ? native.deviceAddress() : "";
+    $("hsAddress").textContent = address || "the address under Settings → My Fire TV → About → Network";
+    $("homeSetup").hidden = false;
+  }
 
   function openDrawer() {
     const grid = $("drawerGrid");
@@ -574,6 +580,7 @@
       checkForUpdates: () => setTimeout(() => window.onUpdateCheck("none"), 800),
       isHomeRedirectOn: () => true,
       openAccessibilitySettings: () => true,
+      deviceAddress: () => "192.168.0.15",
       fetch: () => {}
     };
   }
