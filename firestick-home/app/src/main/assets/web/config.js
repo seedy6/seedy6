@@ -2,7 +2,7 @@
 // by pointing remoteConfigUrl at a JSON file (for example one served by the Mac mini).
 window.HOME_CONFIG = {
   name: "Saeed",
-  theme: "fengwei", // "fengwei" or "spartan"; the Menu (≡) button switches
+  theme: "versus", // "versus" (both), "spartan" or "fengwei"; the Menu (≡) button cycles them
   sound: true,
   volume: 0.7,
   // Replay the intro when you come back to the home screen after this many minutes away.

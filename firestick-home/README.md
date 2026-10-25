@@ -8,10 +8,11 @@ animated "Welcome, Saeed" intro with sound, then shows:
 - daily metrics from the Mac mini
 - your apps, with the ones you use first and Amazon's clutter kept out of the row
 
-It has two themes. The Menu (≡) button on the remote switches between them, and Play/Pause replays the intro.
+It has three themes. The Menu (≡) button on the remote cycles through them, and Play/Pause replays the intro.
 
 | Theme | Look |
 | --- | --- |
+| **Spartan × Feng Wei** (default) | Letterboxed versus screen: the Spartan sweeps in from the left and Feng Wei from the right, they clash with lightning, then "Welcome" slams down and the name decodes and catches fire |
 | **Feng Wei** | Black and crimson, a brush-stroke slash, gold title slams with impact hits and a gong, rising embers |
 | **Spartan** | A HUD with a charging shield ring, decoding text, a "systems online" chime, hex grid and star dust |
 

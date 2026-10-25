@@ -37,9 +37,9 @@
   fit();
 
   // ---------- Theme ----------
-  const THEMES = { fengwei: "Feng Wei", spartan: "Spartan" };
+  const THEMES = { versus: "Spartan × Feng Wei", spartan: "Spartan", fengwei: "Feng Wei" };
   let theme = store.get("theme") || config.theme;
-  if (!THEMES[theme]) theme = "fengwei";
+  if (!THEMES[theme]) theme = "versus";
   function applyTheme() {
     document.body.dataset.theme = theme;
     Sfx.configure({ theme });
@@ -79,7 +79,8 @@
   };
   window.onMenuKey = switchTheme;
   function switchTheme() {
-    theme = theme === "fengwei" ? "spartan" : "fengwei";
+    const order = Object.keys(THEMES);
+    theme = order[(order.indexOf(theme) + 1) % order.length];
     store.set("theme", theme);
     applyTheme();
     toast("Theme: " + THEMES[theme]);
@@ -242,7 +243,7 @@
     row.innerHTML = "";
     [...pinned, ...rest].slice(0, 8).forEach((a) => row.appendChild(appTile(a)));
     row.appendChild(utilTile("grid", "All apps", openDrawer));
-    row.appendChild(utilTile("theme", THEMES[theme === "fengwei" ? "spartan" : "fengwei"], switchTheme));
+    row.appendChild(utilTile("theme", "Theme", switchTheme));
     row.appendChild(utilTile("replay", "Replay intro", playIntro));
     row.appendChild(utilTile("settings", "Settings", () => native.openSettings()));
   }
@@ -302,7 +303,8 @@
     if (config.remoteConfigUrl) {
       try { Object.assign(config, await getJson(config.remoteConfigUrl)); } catch (e) {}
     }
-    Sfx.configure({ sound: config.sound, volume: config.volume });
+    const params = new URLSearchParams(location.search);
+    Sfx.configure({ sound: config.sound && !params.has("silent"), volume: config.volume });
     $("name").textContent = config.name;
     applyTheme();
     tickClock();
@@ -311,10 +313,10 @@
     refreshPrayers();
     refreshMetrics();
     setInterval(refreshMetrics, 5 * 60000);
-    if (new URLSearchParams(location.search).has("nointro")) {
+    if (params.has("nointro")) {
       document.body.classList.remove("intro-on");
       focusFirst();
-    } else playIntro();
+    } else if (!params.has("hold")) playIntro();
   }
 
   // ---------- Desktop preview stand-in for window.Android ----------

@@ -1,7 +1,15 @@
 // All sound effects are synthesised with Web Audio, so there are no audio files to ship.
 const Sfx = (() => {
   let ctx = null, master = null, noiseBuf = null;
-  let enabled = true, volume = 0.7, theme = "fengwei";
+  let enabled = true, volume = 0.7, theme = "versus";
+  let offline = false, clock = 0; // clock: seconds added to every cue while rendering offline
+
+  function makeNoise(c) {
+    const buf = c.createBuffer(1, c.sampleRate * 2, c.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    return buf;
+  }
 
   function audio() {
     if (!enabled) return null;
@@ -12,11 +20,9 @@ const Sfx = (() => {
       master = ctx.createGain();
       master.gain.value = volume;
       master.connect(ctx.destination);
-      noiseBuf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
-      const d = noiseBuf.getChannelData(0);
-      for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+      noiseBuf = makeNoise(ctx);
     }
-    if (ctx.state === "suspended") ctx.resume();
+    if (!offline && ctx.state === "suspended") ctx.resume();
     return ctx;
   }
 
@@ -31,7 +37,7 @@ const Sfx = (() => {
 
   function tone({ type = "sine", f, f2, at = 0, attack = 0.005, peak = 0.2, decay = 0.2, dest }) {
     const c = audio(); if (!c) return;
-    const t = c.currentTime + at;
+    const t = c.currentTime + clock + at;
     const o = c.createOscillator();
     o.type = type;
     o.frequency.setValueAtTime(f, t);
@@ -43,7 +49,7 @@ const Sfx = (() => {
 
   function noise({ at = 0, dur = 0.3, peak = 0.3, type = "bandpass", f = 1000, f2, q = 1, attack = 0.01 }) {
     const c = audio(); if (!c) return;
-    const t = c.currentTime + at;
+    const t = c.currentTime + clock + at;
     const src = c.createBufferSource();
     src.buffer = noiseBuf;
     const filter = c.createBiquadFilter();
@@ -61,7 +67,7 @@ const Sfx = (() => {
     // Spartan: shield charge, decode blips and a bright "systems online" chord.
     spartanCharge() {
       const c = audio(); if (!c) return;
-      const t = c.currentTime;
+      const t = c.currentTime + clock;
       const lp = c.createBiquadFilter();
       lp.type = "lowpass";
       lp.frequency.setValueAtTime(300, t);
@@ -102,13 +108,34 @@ const Sfx = (() => {
       });
     },
 
+    // Cinematic: a low rumble under the opening, a riser into the clash and an electric crackle.
+    rumble(dur = 2.4) {
+      noise({ dur, peak: 0.45, type: "lowpass", f: 90, f2: 160, q: 0.7, attack: dur * 0.6 });
+      tone({ f: 41, attack: dur * 0.5, peak: 0.3, decay: dur * 0.6 });
+    },
+    riser(dur = 1.1) {
+      noise({ dur, peak: 0.28, type: "highpass", f: 400, f2: 7000, q: 0.9, attack: dur * 0.9 });
+      tone({ type: "sawtooth", f: 220, f2: 880, attack: dur * 0.9, peak: 0.06, decay: 0.1 });
+    },
+    zap() {
+      for (let i = 0; i < 7; i++) {
+        noise({ at: i * 0.035 + Math.random() * 0.02, dur: 0.05, peak: 0.25, type: "bandpass", f: 2500 + Math.random() * 3000, q: 6, attack: 0.002 });
+      }
+      tone({ type: "square", f: 60, attack: 0.002, peak: 0.12, decay: 0.3 });
+    },
+    // A wide stereo-ish whoosh for things flying past the camera.
+    swoosh() {
+      noise({ dur: 0.5, peak: 0.42, f: 200, f2: 2600, q: 0.6, attack: 0.18 });
+      noise({ at: 0.05, dur: 0.4, peak: 0.2, type: "highpass", f: 1500, f2: 6000, q: 0.5, attack: 0.15 });
+    },
+
     // UI feedback, flavoured per theme.
     tick() {
-      if (theme === "spartan") tone({ f: 1900, attack: 0.002, peak: 0.05, decay: 0.05 });
+      if (theme !== "fengwei") tone({ f: 1900, attack: 0.002, peak: 0.05, decay: 0.05 });
       else tone({ type: "triangle", f: 820, f2: 520, attack: 0.002, peak: 0.12, decay: 0.06 });
     },
     select() {
-      if (theme === "spartan") {
+      if (theme !== "fengwei") {
         tone({ f: 880, attack: 0.004, peak: 0.1, decay: 0.15 });
         tone({ f: 1320, at: 0.07, attack: 0.004, peak: 0.1, decay: 0.25 });
       } else fx.impact(false);
@@ -123,6 +150,44 @@ const Sfx = (() => {
       if (opts.theme) theme = opts.theme;
       if (master) master.gain.value = volume;
     },
-    unlock() { audio(); }
+    unlock() { audio(); },
+
+    /**
+     * Render cues to a WAV file instead of the speakers (used to put sound on the demo video).
+     * script(at) is called once; at(seconds, fn) runs fn with its sounds placed at that time.
+     */
+    async render(seconds, script) {
+      const saved = { ctx, master, noiseBuf, enabled };
+      const off = new OfflineAudioContext(2, Math.ceil(seconds * 44100), 44100);
+      ctx = off;
+      master = off.createGain();
+      master.gain.value = volume;
+      master.connect(off.destination);
+      noiseBuf = makeNoise(off);
+      enabled = true;
+      offline = true;
+      try {
+        script((sec, fn) => { clock = sec; try { fn(); } finally { clock = 0; } });
+      } finally {
+        ({ ctx, master, noiseBuf, enabled } = saved);
+        offline = false;
+      }
+      return toWav(await off.startRendering());
+    }
   };
+
+  function toWav(buf) {
+    const ch = buf.numberOfChannels, n = buf.length, bytes = 44 + n * ch * 2;
+    const v = new DataView(new ArrayBuffer(bytes));
+    const str = (o, t) => [...t].forEach((c, i) => v.setUint8(o + i, c.charCodeAt(0)));
+    str(0, "RIFF"); v.setUint32(4, bytes - 8, true); str(8, "WAVEfmt ");
+    v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, ch, true);
+    v.setUint32(24, buf.sampleRate, true); v.setUint32(28, buf.sampleRate * ch * 2, true);
+    v.setUint16(32, ch * 2, true); v.setUint16(34, 16, true); str(36, "data"); v.setUint32(40, n * ch * 2, true);
+    const data = [...Array(ch)].map((_, i) => buf.getChannelData(i));
+    for (let i = 0, o = 44; i < n; i++) {
+      for (let c = 0; c < ch; c++, o += 2) v.setInt16(o, Math.max(-1, Math.min(1, data[c][i])) * 0x7fff, true);
+    }
+    return v.buffer;
+  }
 })();
