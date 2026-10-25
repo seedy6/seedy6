@@ -88,7 +88,12 @@
     lastSeen = Date.now();
     tickClock();
     refreshPrayers();
-    if (awayMin >= config.introAfterMinutes) playIntro();
+    if (awayMin >= config.introAfterMinutes && !Intro.playing) playIntro();
+  };
+  // The Fire Stick woke from sleep (the projector was switched on): play the intro.
+  window.onWake = () => {
+    lastSeen = Date.now();
+    if (!Intro.playing) playIntro();
   };
   window.onHomePressed = () => {
     if (!$("webApp").hidden) closeWebApp();

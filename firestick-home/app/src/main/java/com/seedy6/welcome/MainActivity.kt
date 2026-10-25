@@ -2,7 +2,10 @@ package com.seedy6.welcome
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.graphics.Color
 import android.os.Bundle
 import android.view.KeyEvent
@@ -15,6 +18,14 @@ import android.webkit.WebViewClient
  */
 class MainActivity : Activity() {
     private lateinit var web: WebView
+    private var screenWentOff = false
+
+    // The Fire Stick turns the screen off when it goes to sleep; coming back after that is "switching on".
+    private val screenOff = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            if (intent.action == Intent.ACTION_SCREEN_OFF) screenWentOff = true
+        }
+    }
     private lateinit var bridge: Bridge
     lateinit var updater: Updater
 
@@ -42,6 +53,7 @@ class MainActivity : Activity() {
         web.addJavascriptInterface(bridge, "Android")
         setContentView(web)
         web.loadUrl(updater.pageUrl())
+        registerReceiver(screenOff, IntentFilter(Intent.ACTION_SCREEN_OFF))
         web.requestFocus()
     }
 
@@ -51,6 +63,10 @@ class MainActivity : Activity() {
         HomeSwitch.ensureOn(this) // in case Fire OS cleared the redirect
         web.onResume()
         web.resumeTimers()
+        if (screenWentOff) {
+            screenWentOff = false
+            js("window.onWake && onWake()") // before onHomeResume, which skips its own check while the intro plays
+        }
         js("window.onHomeResume && onHomeResume()")
         // Automatic checks only speak up when there is something new.
         updater.checkForUpdates { result ->
@@ -92,6 +108,7 @@ class MainActivity : Activity() {
     }
 
     override fun onDestroy() {
+        unregisterReceiver(screenOff)
         bridge.shutdown()
         updater.shutdown()
         web.destroy()

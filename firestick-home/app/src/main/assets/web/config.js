@@ -5,7 +5,8 @@ window.HOME_CONFIG = {
   theme: "versus", // "versus" (both), "spartan" or "fengwei"; the Menu (≡) button cycles them
   sound: true,
   volume: 0.7,
-  // Replay the intro when you come back to the home screen after this many minutes away.
+  // The intro plays when the Fire Stick starts or wakes from sleep. Coming back from an app after
+  // this many minutes away plays it too.
   introAfterMinutes: 120,
 
   // Prayer times from SalahLog (najaf.org times, cached in Cortana's PocketBase). If it can't be
