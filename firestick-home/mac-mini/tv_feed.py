@@ -3,8 +3,9 @@
 
     python3 tv_feed.py [--port 8787] [--file metrics.json]
 
-The Fire Stick fetches http://<mac-mini-ip>:8787/tv/metrics.json. Until this is wired to
-the real data, it serves whatever JSON file you point it at (format: metrics.sample.json).
+The Fire Stick fetches http://<mac-mini-ip>:8787/tv/metrics.json and /tv/prayers.json.
+Until these are wired to Cortana's real data (SalahLog's PraySo times and the daily metrics),
+they serve the JSON files you point them at (formats: metrics.sample.json, prayers.sample.json).
 """
 import argparse
 import http.server
@@ -15,7 +16,7 @@ HERE = pathlib.Path(__file__).resolve().parent
 
 
 def build_feed(path: pathlib.Path) -> dict:
-    # Replace this with a read from Cortana's data (PocketBase etc.) once we wire it up.
+    # Replace these reads with Cortana's data (SalahLog, PocketBase etc.) once we wire it up.
     return json.loads(path.read_text())
 
 
@@ -23,15 +24,18 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--port", type=int, default=8787)
     parser.add_argument("--file", type=pathlib.Path, default=HERE / "metrics.sample.json")
+    parser.add_argument("--prayers", type=pathlib.Path, default=HERE / "prayers.sample.json")
     args = parser.parse_args()
+    routes = {"/tv/metrics.json": args.file, "/tv/prayers.json": args.prayers}
 
     class Handler(http.server.BaseHTTPRequestHandler):
         def do_GET(self):
-            if self.path.split("?")[0] != "/tv/metrics.json":
+            path = routes.get(self.path.split("?")[0])
+            if path is None:
                 self.send_error(404)
                 return
             try:
-                body = json.dumps(build_feed(args.file)).encode()
+                body = json.dumps(build_feed(path)).encode()
             except (OSError, ValueError) as e:
                 self.send_error(500, str(e))
                 return
@@ -41,7 +45,8 @@ def main() -> None:
             self.end_headers()
             self.wfile.write(body)
 
-    print(f"Serving {args.file} at http://0.0.0.0:{args.port}/tv/metrics.json")
+    for route, path in routes.items():
+        print(f"Serving {path} at http://0.0.0.0:{args.port}{route}")
     http.server.ThreadingHTTPServer(("0.0.0.0", args.port), Handler).serve_forever()
 
 

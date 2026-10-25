@@ -115,6 +115,16 @@
     const key = dayKey(now);
     if (today && today.key === key) return renderPrayers();
     let data = store.get("prayers");
+    if (config.prayerUrl && (!data || data.key !== key || !data.source)) {
+      // Times from the Mac mini (SalahLog / PraySo) win over calculated ones.
+      try {
+        const res = await getJson(config.prayerUrl);
+        if (res.date === undefined || res.date === key) {
+          data = { key, timings: res.timings, hijri: res.hijri || "", source: res.source || "Mac mini" };
+          store.set("prayers", data);
+        }
+      } catch (e) {}
+    }
     if (!data || data.key !== key) {
       const { city, country, method } = config.prayer;
       const d = `${now.getDate()}-${now.getMonth() + 1}-${now.getFullYear()}`;
@@ -123,7 +133,7 @@
       try {
         const res = await getJson(url);
         const h = res.data.date.hijri;
-        data = { key, timings: res.data.timings, hijri: `${h.day} ${h.month.en} ${h.year} AH` };
+        data = { key, timings: res.data.timings, hijri: `${h.day} ${h.month.en} ${h.year} AH`, source: "" };
         store.set("prayers", data);
       } catch (e) {
         data = onDevice ? null : PreviewBridge.samplePrayers(key);
@@ -134,14 +144,14 @@
       $("prayerRow").innerHTML = `<div class="empty">Prayer times unavailable. Check the internet connection.</div>`;
       return;
     }
-    today = { key, hijri: data.hijri, sample: !!data.sample, times: {} };
+    today = { key, hijri: data.hijri, sample: !!data.sample, source: data.source, times: {} };
     for (const p of PRAYERS) today.times[p] = toDate(data.timings[p], now);
     renderPrayers();
   }
 
   function renderPrayers() {
     if (!today) return;
-    $("prayerPlace").textContent = config.prayer.city;
+    $("prayerPlace").textContent = config.prayer.city + (today.source ? " · " + today.source : " · calculated");
     $("prayerBadge").hidden = !today.sample;
     $("prayerBadge").textContent = "Sample times";
     $("hijriDate").textContent = today.hijri;

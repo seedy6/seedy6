@@ -12,7 +12,7 @@ It has three themes. The Menu (≡) button on the remote cycles through them, an
 
 | Theme | Look |
 | --- | --- |
-| **Spartan × Feng Wei** (default) | Letterboxed versus screen: the Spartan sweeps in from the left and Feng Wei from the right, they clash with lightning, then "Welcome" slams down and the name decodes and catches fire |
+| **Spartan × Feng Wei** (default) | Letterboxed, film-grain versus screen: a wireframe Spartan helmet whose visor lights up sweeps in from the left, Feng Wei in red rim light from the right; they meet in a flash of light, then the name decodes and locks in brushed metal |
 | **Feng Wei** | Black and crimson, a brush-stroke slash, gold title slams with impact hits and a gong, rising embers |
 | **Spartan** | A HUD with a charging shield ring, decoding text, a "systems online" chime, hex grid and star dust |
 
@@ -59,8 +59,10 @@ Defaults live in [`app/src/main/assets/web/config.js`](app/src/main/assets/web/c
 sound, prayer location and method, apps to pin and apps to hide. Set `remoteConfigUrl` to a JSON file on the
 Mac mini to change any of these without reinstalling.
 
-Prayer times come from [api.aladhan.com](https://aladhan.com/prayer-times-api) and are cached for the day.
-`method: 0` is Shia Ithna-Ashari (Jafari).
+Prayer times come from the Mac mini when `prayerUrl` is set (`/tv/prayers.json` from `mac-mini/tv_feed.py`, meant to
+carry SalahLog's PraySo times). Otherwise they are calculated for Manchester by
+[api.aladhan.com](https://aladhan.com/prayer-times-api) with `method: 0`, Shia Ithna-Ashari (Jafari), and the
+screen labels them "calculated". Either way they are cached for the day.
 
 ## Mac mini metrics
 

@@ -8,9 +8,11 @@ window.HOME_CONFIG = {
   // Replay the intro when you come back to the home screen after this many minutes away.
   introAfterMinutes: 120,
 
-  // Prayer times from api.aladhan.com. method 0 = Shia Ithna-Ashari (Jafari);
-  // see https://aladhan.com/calculation-methods for the others.
-  prayer: { city: "London", country: "United Kingdom", method: 0 },
+  // Prayer times. prayerUrl is the Mac mini's copy of SalahLog's PraySo times (see mac-mini/README);
+  // when it is empty or unreachable, times are calculated by api.aladhan.com for the city below
+  // with method 0 = Shia Ithna-Ashari (Jafari).
+  prayerUrl: "",
+  prayer: { city: "Manchester", country: "United Kingdom", method: 0 },
 
   // JSON feed of daily metrics from the Mac mini; see mac-mini/README.md for the format.
   // Example: "http://192.168.0.10:8787/tv/metrics.json"
