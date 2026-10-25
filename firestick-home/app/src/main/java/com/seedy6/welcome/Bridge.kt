@@ -78,6 +78,14 @@ class Bridge(private val activity: MainActivity) {
         return true
     }
 
+    /** Check now, from the "Check for updates" tile; answers through window.onUpdateCheck(result). */
+    @JavascriptInterface
+    fun checkForUpdates() {
+        activity.updater.checkForUpdates(force = true) { result ->
+            activity.js("window.onUpdateCheck && onUpdateCheck('$result')")
+        }
+    }
+
     /** Switch to a page update that has just been downloaded. */
     @JavascriptInterface
     fun reloadLatest() = activity.reloadPage()

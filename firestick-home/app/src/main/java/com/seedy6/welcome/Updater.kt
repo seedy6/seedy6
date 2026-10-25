@@ -42,12 +42,12 @@ class Updater(private val activity: MainActivity) {
     }
 
     /**
-     * Checks GitHub at most every few hours. Calls back with "web" once a new page is in place,
-     * or "apk" when a new APK is available. Failures are silent; the next check tries again.
+     * Checks GitHub, at most every few hours unless [force]d. Calls back with "web" once a new page
+     * is in place, "apk" when a new APK is available, "none" when up to date, or "error".
      */
-    fun checkForUpdates(onResult: (String) -> Unit) {
+    fun checkForUpdates(force: Boolean = false, onResult: (String) -> Unit) {
         val now = System.currentTimeMillis()
-        if (now - prefs.getLong(LAST_CHECK, 0) < CHECK_EVERY_MS) return
+        if (!force && now - prefs.getLong(LAST_CHECK, 0) < CHECK_EVERY_MS) return
         exec.execute {
             try {
                 val remote = JSONObject(httpText(BASE + "version.json"))
@@ -57,9 +57,11 @@ class Updater(private val activity: MainActivity) {
                 } else if (remote.optString("web") != currentWeb()) {
                     installWeb()
                     onResult("web")
+                } else {
+                    onResult("none")
                 }
             } catch (e: Exception) {
-                // Offline or GitHub unreachable: try again on a later check.
+                onResult("error") // offline or GitHub unreachable; automatic checks try again later
             }
         }
     }

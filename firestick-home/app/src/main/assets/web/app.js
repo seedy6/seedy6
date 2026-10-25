@@ -123,6 +123,11 @@
     }
   };
   window.onUpdateError = (message) => toast("Update failed: " + message);
+  window.onUpdateCheck = (result) => {
+    if (result === "none") toast("You're up to date");
+    else if (result === "error") toast("Couldn't check for updates. Check the internet connection.");
+    else window.onUpdate(result);
+  };
   function switchTheme() {
     const order = Object.keys(THEMES);
     theme = order[(order.indexOf(theme) + 1) % order.length];
@@ -366,6 +371,7 @@
     grid: `<svg viewBox="0 0 64 64"><rect x="8" y="8" width="18" height="18"/><rect x="38" y="8" width="18" height="18"/><rect x="8" y="38" width="18" height="18"/><rect x="38" y="38" width="18" height="18"/></svg>`,
     theme: `<svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="22"/><path d="M32 10 A22 22 0 0 1 32 54 Z" fill="currentColor"/></svg>`,
     replay: `<svg viewBox="0 0 64 64"><path d="M14 32 A18 18 0 1 0 20 18"/><path d="M12 10 L20 18 L10 22"/></svg>`,
+    refresh: `<svg viewBox="0 0 64 64"><path d="M50 30a18 18 0 0 0-32-11l-4 4"/><path d="M14 12v11h11"/><path d="M14 34a18 18 0 0 0 32 11l4-4"/><path d="M50 52V41H39"/></svg>`,
     update: `<svg viewBox="0 0 64 64"><path d="M32 10v30M20 28l12 12 12-12"/><path d="M12 46v8h40v-8"/></svg>`,
     firetv: `<svg viewBox="0 0 64 64"><rect x="8" y="14" width="48" height="30" rx="3"/><path d="M24 54h16M32 44v10"/></svg>`,
     pin: `<svg viewBox="0 0 64 64"><path d="M10 30 L32 12 L54 30"/><path d="M16 26v26h32V26"/><path d="M27 52V38h10v14"/></svg>`,
@@ -428,6 +434,12 @@
       row.appendChild(utilTile("pin", "Make this my home", () => {
         if (!native.openAccessibilitySettings()) toast("See the README: switch it on with ADB from the Mac mini");
         else toast("Switch on “Welcome Home: Home button”");
+      }));
+    }
+    if (typeof native.checkForUpdates === "function") {
+      row.appendChild(utilTile("refresh", "Check for updates", () => {
+        toast("Checking for updates…");
+        native.checkForUpdates();
       }));
     }
     row.appendChild(utilTile("settings", "Settings", () => native.openSettings()));
@@ -559,6 +571,7 @@
       launch: (pkg) => { toast("Would open " + pkg); return true; },
       openSettings: () => toast("Would open Fire TV settings"),
       openFireTvHome: () => true,
+      checkForUpdates: () => setTimeout(() => window.onUpdateCheck("none"), 800),
       isHomeRedirectOn: () => true,
       openAccessibilitySettings: () => true,
       fetch: () => {}

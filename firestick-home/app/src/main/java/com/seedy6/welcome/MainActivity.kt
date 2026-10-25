@@ -51,7 +51,10 @@ class MainActivity : Activity() {
         web.onResume()
         web.resumeTimers()
         js("window.onHomeResume && onHomeResume()")
-        updater.checkForUpdates { result -> js("window.onUpdate && onUpdate('$result')") }
+        // Automatic checks only speak up when there is something new.
+        updater.checkForUpdates { result ->
+            if (result == "web" || result == "apk") js("window.onUpdate && onUpdate('$result')")
+        }
     }
 
     /** Loads the newest page (after a downloaded update) without replaying the intro. */
