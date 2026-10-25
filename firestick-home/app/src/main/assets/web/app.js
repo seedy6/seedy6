@@ -462,7 +462,8 @@
 
   // Fire TV hides third-party accessibility switches, so show how to turn it on with ADB instead.
   function openHomeSetup() {
-    const address = typeof native.deviceAddress === "function" ? native.deviceAddress() : "";
+    let address = "";
+    try { address = typeof native.deviceAddress === "function" ? native.deviceAddress() : ""; } catch (e) {}
     $("hsAddress").textContent = address || "the address under Settings → My Fire TV → About → Network";
     $("homeSetup").hidden = false;
   }
