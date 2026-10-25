@@ -26,11 +26,27 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
+      # Content hashes let installed apps tell a page-only update (downloaded silently)
+      # from one that changes the Kotlin side (needs a new APK). See Updater.kt.
+      - name: Stamp build versions
+        run: |
+          native=$(git ls-files -s -- . ':!app/src/main/assets/web' ':!README.md' ':!art' ':!mac-mini' | sha256sum | cut -c1-16)
+          web=$(git ls-files -s -- app/src/main/assets/web | sha256sum | cut -c1-16)
+          printf '{"native":"%s","web":"%s"}\n' "$native" "$web" > app/src/main/assets/build.json
+          cat app/src/main/assets/build.json
+
       - name: Build APK
         run: |
           chmod +x gradlew
           ./gradlew assembleDebug --no-daemon
           cp app/build/outputs/apk/debug/app-debug.apk welcome-home.apk
+
+      - name: Package the page for over-the-air updates
+        run: |
+          cp app/src/main/assets/build.json version.json
+          cp app/src/main/assets/build.json app/src/main/assets/web/build.json
+          (cd app/src/main/assets/web && zip -qr ../../../../../welcome-home-web.zip .)
+          rm app/src/main/assets/web/build.json
 
       - uses: actions/upload-artifact@v4
         with:
@@ -51,4 +67,7 @@ jobs:
             Latest build of Welcome Home from `${{ github.ref_name }}` (${{ github.sha }}).
             On the Fire Stick, open Downloader and enter:
             https://github.com/seedy6/seedy6/releases/download/firestick-home-latest/welcome-home.apk
-          files: firestick-home/welcome-home.apk
+          files: |
+            firestick-home/welcome-home.apk
+            firestick-home/welcome-home-web.zip
+            firestick-home/version.json

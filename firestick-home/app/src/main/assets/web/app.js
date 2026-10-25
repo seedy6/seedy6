@@ -101,6 +101,28 @@
     else if (!$("drawer").hidden) closeDrawer();
   };
   window.onMenuKey = switchTheme;
+
+  // ---------- Updates (see Updater.kt) ----------
+  window.onUpdate = (kind) => {
+    if (kind === "web") {
+      // A new page is downloaded: switch to it once nothing is playing.
+      const swap = () => {
+        if (Intro.playing || !$("webApp").hidden) return setTimeout(swap, 2000);
+        toast("Updated");
+        setTimeout(() => native.reloadLatest(), 1200);
+      };
+      swap();
+    } else if (kind === "apk" && !document.getElementById("updateTile")) {
+      const tile = utilTile("update", "Update app", () => {
+        toast("Downloading the update…");
+        native.installUpdate();
+      });
+      tile.id = "updateTile";
+      $("appRow").insertBefore(tile, $("appRow").firstChild);
+      toast("An app update is ready");
+    }
+  };
+  window.onUpdateError = (message) => toast("Update failed: " + message);
   function switchTheme() {
     const order = Object.keys(THEMES);
     theme = order[(order.indexOf(theme) + 1) % order.length];
@@ -122,7 +144,11 @@
   }
 
   // ---------- Prayer times (api.aladhan.com, cached for the day) ----------
-  const PRAYERS = ["Fajr", "Sunrise", "Dhuhr", "Asr", "Maghrib", "Isha"];
+  // Three prayer times, as SalahLog and najaf.org give them (Asr is prayed with Dhuhr, Isha with
+  // Maghrib), plus sunrise as the end of Fajr.
+  const PRAYERS = ["Fajr", "Sunrise", "Dhuhr", "Maghrib"];
+  const PRAYER_LABELS = { Dhuhr: "Dhuhr & Asr", Maghrib: "Maghrib & Isha" };
+  const label = (p) => PRAYER_LABELS[p] || p;
   let today = null; // { key, times: {Fajr: Date, ...}, hijri, sample }
 
   function dayKey(d) { return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate(); }
@@ -189,7 +215,7 @@
     $("prayerRow").innerHTML = shown.map((p) => {
       const t = today.times[p];
       const cls = p === next ? "next" : t < now ? "passed" : "";
-      return `<div class="prayer ${cls}"><div class="p-name">${p}</div>` +
+      return `<div class="prayer ${cls}" data-prayer="${p}"><div class="p-name">${label(p)}</div>` +
         `<div class="p-time">${t.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}</div></div>`;
     }).join("");
     renderNextPrayer(now);
@@ -201,10 +227,10 @@
     if (!next) { $("nextPrayer").textContent = "Fajr tomorrow"; return; }
     const mins = Math.ceil((today.times[next] - now) / 60000);
     const span = mins >= 60 ? `${Math.floor(mins / 60)}h ${mins % 60}m` : `${mins} min`;
-    $("nextPrayer").textContent = `${next} in ${span}`;
+    $("nextPrayer").textContent = `${label(next)} in ${span}`;
     // Re-render the row as each prayer time passes.
-    const current = document.querySelector(".prayer.next .p-name");
-    if (current && current.textContent !== next) renderPrayers();
+    const current = document.querySelector(".prayer.next");
+    if (current && current.dataset.prayer !== next) renderPrayers();
   }
 
   // ---------- Metrics from the Mac mini ----------
@@ -218,10 +244,12 @@
     }
     $("metricsBadge").hidden = !sample;
     $("metricsBadge").textContent = "Sample data";
+    // Until the Mac mini feed is set up, leave the panel out rather than nag about it.
+    $("metricsPanel").hidden = !config.metricsUrl && !sample;
     if (!feed || !Array.isArray(feed.metrics) || !feed.metrics.length) {
       $("metricsUpdated").textContent = "";
       $("metricRow").innerHTML = `<div class="empty" style="grid-column: 1 / -1">` +
-        (config.metricsUrl ? "Can't reach the Mac mini right now." : "Connect your Mac mini to show your daily metrics here.") + `</div>`;
+        "Can't reach the Mac mini right now." + `</div>`;
       return;
     }
     $("metricsUpdated").textContent = feed.updated
@@ -252,6 +280,7 @@
     grid: `<svg viewBox="0 0 64 64"><rect x="8" y="8" width="18" height="18"/><rect x="38" y="8" width="18" height="18"/><rect x="8" y="38" width="18" height="18"/><rect x="38" y="38" width="18" height="18"/></svg>`,
     theme: `<svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="22"/><path d="M32 10 A22 22 0 0 1 32 54 Z" fill="currentColor"/></svg>`,
     replay: `<svg viewBox="0 0 64 64"><path d="M14 32 A18 18 0 1 0 20 18"/><path d="M12 10 L20 18 L10 22"/></svg>`,
+    update: `<svg viewBox="0 0 64 64"><path d="M32 10v30M20 28l12 12 12-12"/><path d="M12 46v8h40v-8"/></svg>`,
     firetv: `<svg viewBox="0 0 64 64"><rect x="8" y="14" width="48" height="30" rx="3"/><path d="M24 54h16M32 44v10"/></svg>`,
     pin: `<svg viewBox="0 0 64 64"><path d="M10 30 L32 12 L54 30"/><path d="M16 26v26h32V26"/><path d="M27 52V38h10v14"/></svg>`,
     settings: `<svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="9"/><path d="M32 6v10M32 48v10M6 32h10M48 32h10M13.6 13.6l7 7M43.4 43.4l7 7M13.6 50.4l7-7M43.4 20.6l7-7"/></svg>`
@@ -289,7 +318,8 @@
     try { apps = JSON.parse(native.getApps()); } catch (e) { apps = []; }
     apps.sort((a, b) => a.label.localeCompare(b.label));
     const byPkg = Object.fromEntries(apps.map((a) => [a.pkg, a]));
-    const pinned = config.pinnedApps.map((p) => byPkg[p]).filter(Boolean);
+    const replaced = (pkg) => (config.replacedBy[pkg] || []).some((other) => byPkg[other]);
+    const pinned = config.pinnedApps.map((p) => byPkg[p]).filter((a) => a && !replaced(a.pkg));
     const rest = apps.filter((a) => !config.pinnedApps.includes(a.pkg) && !config.hiddenApps.includes(a.pkg));
     const row = $("appRow");
     row.innerHTML = "";
@@ -444,7 +474,7 @@
   }
   PreviewBridge.samplePrayers = (key) => ({
     key, sample: true, hijri: "",
-    timings: { Fajr: "05:28", Sunrise: "07:02", Dhuhr: "11:52", Asr: "14:31", Maghrib: "16:59", Isha: "18:24" }
+    timings: { Fajr: "05:28", Sunrise: "07:02", Dhuhr: "11:52", Maghrib: "16:59" }
   });
   PreviewBridge.sampleMetrics = () => ({
     updated: new Date().toISOString(),

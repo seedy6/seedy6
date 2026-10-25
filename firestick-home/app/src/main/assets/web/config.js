@@ -29,6 +29,11 @@ window.HOME_CONFIG = {
     "com.google.android.youtube.tv" // YouTube on other Android TV devices
   ],
   onlyPinnedApps: true, // false: fill the rest of the row with other installed apps
+  // Leave an app out of the row when one of these is installed (SmartTube stands in for YouTube).
+  replacedBy: {
+    "com.amazon.firetv.youtube": ["com.teamsmart.videomanager.tv", "com.liskovsoft.smarttubetv.beta", "com.liskovsoft.smarttubetv"],
+    "com.google.android.youtube.tv": ["com.teamsmart.videomanager.tv", "com.liskovsoft.smarttubetv.beta", "com.liskovsoft.smarttubetv"]
+  },
 
   // Web apps (for example from the Mac mini) opened full-screen on the TV; Back returns home.
   // A tile only appears once its url is set.

@@ -16,6 +16,7 @@ import android.webkit.WebViewClient
 class MainActivity : Activity() {
     private lateinit var web: WebView
     private lateinit var bridge: Bridge
+    lateinit var updater: Updater
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -36,10 +37,11 @@ class MainActivity : Activity() {
             isFocusableInTouchMode = true
             webViewClient = WebViewClient()
         }
+        updater = Updater(this)
         bridge = Bridge(this)
         web.addJavascriptInterface(bridge, "Android")
         setContentView(web)
-        web.loadUrl("file:///android_asset/web/index.html")
+        web.loadUrl(updater.pageUrl())
         web.requestFocus()
     }
 
@@ -49,6 +51,12 @@ class MainActivity : Activity() {
         web.onResume()
         web.resumeTimers()
         js("window.onHomeResume && onHomeResume()")
+        updater.checkForUpdates { result -> js("window.onUpdate && onUpdate('$result')") }
+    }
+
+    /** Loads the newest page (after a downloaded update) without replaying the intro. */
+    fun reloadPage() {
+        web.post { web.loadUrl(updater.pageUrl() + "?nointro") }
     }
 
     // Stop animations and timers while another app is on screen; the Fire Stick has little CPU to spare.
@@ -81,6 +89,7 @@ class MainActivity : Activity() {
 
     override fun onDestroy() {
         bridge.shutdown()
+        updater.shutdown()
         web.destroy()
         super.onDestroy()
     }

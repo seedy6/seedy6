@@ -78,6 +78,18 @@ class Bridge(private val activity: MainActivity) {
         return true
     }
 
+    /** Switch to a page update that has just been downloaded. */
+    @JavascriptInterface
+    fun reloadLatest() = activity.reloadPage()
+
+    /** Download the new APK and open the installer; errors come back through window.onUpdateError. */
+    @JavascriptInterface
+    fun installUpdate() {
+        activity.updater.installApk { message ->
+            activity.js("window.onUpdateError && onUpdateError(${JSONObject.quote(message)})")
+        }
+    }
+
     @JavascriptInterface
     fun openSettings() {
         activity.runOnUiThread {
