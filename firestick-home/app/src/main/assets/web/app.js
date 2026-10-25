@@ -147,6 +147,56 @@
     $("eyebrow").textContent = h < 5 ? "Peaceful night" : h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
     $("gregDate").textContent = now.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
     renderNextPrayer(now);
+    renderIslamic(now);
+  }
+
+  // ---------- Islamic date and Shia events (events.js) ----------
+  const HIJRI_MONTHS = ["Muharram", "Safar", "Rabi al-Awwal", "Rabi al-Thani", "Jumada al-Awwal", "Jumada al-Thani",
+    "Rajab", "Sha'ban", "Ramadan", "Shawwal", "Dhul Qadah", "Dhul Hijjah"]; // same spellings as Munajat
+  // Umm al-Qura via Intl, as Munajat does; older WebViews may only have the civil calculation.
+  const hijriFormat = (() => {
+    for (const cal of ["islamic-umalqura", "islamic-civil", "islamic"]) {
+      try {
+        const f = new Intl.DateTimeFormat(`en-US-u-ca-${cal}`, { year: "numeric", month: "numeric", day: "numeric" });
+        if (f.resolvedOptions().calendar === cal) return f;
+      } catch (e) {}
+    }
+    return null;
+  })();
+  function hijri(date) {
+    if (!hijriFormat) return null;
+    const d = new Date(date);
+    d.setDate(d.getDate() + (config.hijriAdjust || 0));
+    const parts = hijriFormat.formatToParts(d);
+    const get = (type) => Number((parts.find((p) => p.type === type) || {}).value);
+    const h = { year: get("year"), month: get("month"), day: get("day") };
+    return h.month && h.day ? h : null;
+  }
+  function addDays(date, n) { const d = new Date(date); d.setDate(d.getDate() + n); return d; }
+  function eventsOn(date) {
+    const h = hijri(date), next = hijri(addDays(date, 1));
+    if (!h) return [];
+    const isLastDay = next && next.month !== h.month;
+    return (window.SHIA_EVENTS || []).filter((e) => e.month === h.month && (e.day === h.day || (e.day === "last" && isLastDay)));
+  }
+
+  let islamicDay = "";
+  function renderIslamic(now) {
+    const key = dayKey(now);
+    if (key === islamicDay) return; // only changes at midnight
+    islamicDay = key;
+    const h = hijri(now);
+    $("hijriDate").textContent = h ? `${h.day} ${HIJRI_MONTHS[h.month - 1]} ${h.year}` : "";
+    $("hijriSep").hidden = !h;
+    // Today's events, or else the next one in the coming three weeks.
+    let found = [], offset = 0;
+    for (; offset <= 21 && !found.length; offset++) found = eventsOn(addDays(now, offset));
+    offset--;
+    if (!found.length) { $("eventLine").hidden = true; return; }
+    $("eventWhen").textContent = offset === 0 ? "Today" : offset === 1 ? "Tomorrow" : `In ${offset} days`;
+    $("eventTitle").textContent = found.map((e) => e.title).join("  ·  ");
+    $("eventLine").className = `event ev-${found[0].kind}${offset === 0 ? " ev-today" : ""}`;
+    $("eventLine").hidden = false;
   }
 
   // ---------- Prayer times (api.aladhan.com, cached for the day) ----------
@@ -212,8 +262,6 @@
     $("prayerPlace").textContent = config.prayer.city + (today.source ? " · " + today.source : " · calculated");
     $("prayerBadge").hidden = !today.sample;
     $("prayerBadge").textContent = "Sample times";
-    $("hijriDate").textContent = today.hijri;
-    $("hijriSep").hidden = !today.hijri;
     const now = new Date();
     const shown = PRAYERS.filter((p) => today.times[p]);
     const next = shown.find((p) => p !== "Sunrise" && today.times[p] > now);

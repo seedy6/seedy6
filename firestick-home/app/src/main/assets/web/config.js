@@ -14,6 +14,10 @@ window.HOME_CONFIG = {
   salahLogUrl: "https://salah-log.vercel.app/api/prayer-times?location=united-kingdom_manchester",
   prayer: { city: "Manchester", country: "United Kingdom", method: 0 },
 
+  // The Islamic date is calculated (Umm al-Qura), which can be a day off Najaf's moon sighting.
+  // Set to -1 or 1 to shift it, the same as Munajat's Hijri adjustment setting.
+  hijriAdjust: 0,
+
   // Weather from open-meteo.com (free, no key).
   weather: { place: "Bolton", latitude: 53.5769, longitude: -2.4282 },
 

@@ -108,6 +108,12 @@ body.intro-on #home { opacity: 0; transform: translateY(18px); }
 [data-theme="spartan"] .welcome .w2 { background: linear-gradient(180deg, #e9fff3, var(--accent-2) 60%, #4fae2a); -webkit-background-clip: text; background-clip: text; }
 .dates { font-size: 32px; color: var(--muted); display: flex; gap: 16px; }
 .dates .dot { color: var(--accent); }
+.event { --ev: var(--accent); display: flex; align-items: baseline; gap: 16px; margin-top: 12px; font-size: 28px; max-width: 1180px; }
+.event.ev-celebration { --ev: var(--accent-2); }
+.event.ev-mourning { --ev: #e0605a; }
+.event .ev-when { flex: none; padding: 3px 12px; font-size: 20px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ev); border: 1px solid var(--ev); }
+.event.ev-today .ev-when { color: var(--bg); background: var(--ev); }
+.event .ev-title { color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .clock { text-align: right; }
 .clock .time { font-family: var(--display); font-weight: 700; font-size: 132px; line-height: 0.9; letter-spacing: var(--display-spacing); }
 [data-theme="spartan"] .clock .time { font-size: 104px; }
