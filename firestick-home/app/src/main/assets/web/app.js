@@ -1,0 +1,358 @@
+// Welcome Home: clock, prayer times, Mac mini metrics, apps and remote navigation.
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const config = Object.assign({}, window.HOME_CONFIG);
+  const store = {
+    get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  };
+
+  // ---------- Native bridge (window.Android on the Fire Stick; a stand-in in a desktop browser) ----------
+  const onDevice = !!window.Android;
+  const native = window.Android || PreviewBridge();
+  const pending = {};
+  let nextId = 0;
+  window.__bridgeResolve = (id, ok, body) => {
+    const p = pending[id];
+    if (!p) return;
+    delete pending[id];
+    ok ? p.resolve(body) : p.reject(new Error(body));
+  };
+  function getText(url) {
+    if (!onDevice) return fetch(url).then((r) => (r.ok ? r.text() : Promise.reject(new Error("HTTP " + r.status))));
+    return new Promise((resolve, reject) => {
+      const id = "r" + nextId++;
+      pending[id] = { resolve, reject };
+      native.fetch(id, url);
+    });
+  }
+  const getJson = (url) => getText(url).then(JSON.parse);
+
+  // ---------- Stage scaling: the page is designed at 1920x1080 ----------
+  function fit() {
+    const s = Math.min(innerWidth / 1920, innerHeight / 1080);
+    $("stage").style.transform = `scale(${s})`;
+  }
+  addEventListener("resize", fit);
+  fit();
+
+  // ---------- Theme ----------
+  const THEMES = { fengwei: "Feng Wei", spartan: "Spartan" };
+  let theme = store.get("theme") || config.theme;
+  if (!THEMES[theme]) theme = "fengwei";
+  function applyTheme() {
+    document.body.dataset.theme = theme;
+    Sfx.configure({ theme });
+    Ambient.start(theme);
+  }
+
+  function toast(text) {
+    const t = $("toast");
+    t.textContent = text;
+    t.classList.add("show");
+    clearTimeout(toast.timer);
+    toast.timer = setTimeout(() => t.classList.remove("show"), 2200);
+  }
+
+  // ---------- Intro ----------
+  let lastSeen = Date.now();
+  function playIntro() {
+    $("drawer").hidden = true;
+    Intro.play(theme, config.name, () => focusFirst());
+  }
+  window.replayIntro = playIntro;
+  window.onHomeResume = () => {
+    // Timers stop while another app is in front, so lastSeen is when we were last on screen.
+    const awayMin = (Date.now() - lastSeen) / 60000;
+    lastSeen = Date.now();
+    tickClock();
+    refreshPrayers();
+    if (awayMin >= config.introAfterMinutes) playIntro();
+  };
+  window.onHomePressed = () => {
+    if (!$("drawer").hidden) closeDrawer();
+    else focusFirst();
+  };
+  window.onBackKey = () => {
+    if (Intro.playing) Intro.skip();
+    else if (!$("drawer").hidden) closeDrawer();
+  };
+  window.onMenuKey = switchTheme;
+  function switchTheme() {
+    theme = theme === "fengwei" ? "spartan" : "fengwei";
+    store.set("theme", theme);
+    applyTheme();
+    toast("Theme: " + THEMES[theme]);
+    playIntro();
+  }
+
+  // ---------- Clock and greeting ----------
+  function tickClock() {
+    const now = new Date();
+    lastSeen = Date.now();
+    $("clock").textContent = now.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+    const h = now.getHours();
+    $("eyebrow").textContent = h < 5 ? "Peaceful night" : h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
+    $("gregDate").textContent = now.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
+    renderNextPrayer(now);
+  }
+
+  // ---------- Prayer times (api.aladhan.com, cached for the day) ----------
+  const PRAYERS = ["Fajr", "Sunrise", "Dhuhr", "Asr", "Maghrib", "Isha"];
+  let today = null; // { key, times: {Fajr: Date, ...}, hijri, sample }
+
+  function dayKey(d) { return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate(); }
+  function toDate(hhmm, base) {
+    const [h, m] = hhmm.slice(0, 5).split(":").map(Number);
+    const d = new Date(base);
+    d.setHours(h, m, 0, 0);
+    return d;
+  }
+
+  async function refreshPrayers() {
+    const now = new Date();
+    const key = dayKey(now);
+    if (today && today.key === key) return renderPrayers();
+    let data = store.get("prayers");
+    if (!data || data.key !== key) {
+      const { city, country, method } = config.prayer;
+      const d = `${now.getDate()}-${now.getMonth() + 1}-${now.getFullYear()}`;
+      const url = `https://api.aladhan.com/v1/timingsByCity/${d}?city=${encodeURIComponent(city)}` +
+        `&country=${encodeURIComponent(country)}&method=${method}`;
+      try {
+        const res = await getJson(url);
+        const h = res.data.date.hijri;
+        data = { key, timings: res.data.timings, hijri: `${h.day} ${h.month.en} ${h.year} AH` };
+        store.set("prayers", data);
+      } catch (e) {
+        data = onDevice ? null : PreviewBridge.samplePrayers(key);
+      }
+    }
+    if (!data) {
+      today = null;
+      $("prayerRow").innerHTML = `<div class="empty">Prayer times unavailable. Check the internet connection.</div>`;
+      return;
+    }
+    today = { key, hijri: data.hijri, sample: !!data.sample, times: {} };
+    for (const p of PRAYERS) today.times[p] = toDate(data.timings[p], now);
+    renderPrayers();
+  }
+
+  function renderPrayers() {
+    if (!today) return;
+    $("prayerPlace").textContent = config.prayer.city;
+    $("prayerBadge").hidden = !today.sample;
+    $("prayerBadge").textContent = "Sample times";
+    $("hijriDate").textContent = today.hijri;
+    $("hijriSep").hidden = !today.hijri;
+    const now = new Date();
+    const next = PRAYERS.find((p) => p !== "Sunrise" && today.times[p] > now);
+    $("prayerRow").innerHTML = PRAYERS.map((p) => {
+      const t = today.times[p];
+      const cls = p === next ? "next" : t < now ? "passed" : "";
+      return `<div class="prayer ${cls}"><div class="p-name">${p}</div>` +
+        `<div class="p-time">${t.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}</div></div>`;
+    }).join("");
+    renderNextPrayer(now);
+  }
+
+  function renderNextPrayer(now) {
+    if (!today) { $("nextPrayer").textContent = ""; return; }
+    const next = PRAYERS.find((p) => p !== "Sunrise" && today.times[p] > now);
+    if (!next) { $("nextPrayer").textContent = "Fajr tomorrow"; return; }
+    const mins = Math.ceil((today.times[next] - now) / 60000);
+    const span = mins >= 60 ? `${Math.floor(mins / 60)}h ${mins % 60}m` : `${mins} min`;
+    $("nextPrayer").textContent = `${next} in ${span}`;
+    // Re-render the row as each prayer time passes.
+    const current = document.querySelector(".prayer.next .p-name");
+    if (current && current.textContent !== next) renderPrayers();
+  }
+
+  // ---------- Metrics from the Mac mini ----------
+  async function refreshMetrics() {
+    let feed = null, sample = false;
+    if (config.metricsUrl) {
+      try { feed = await getJson(config.metricsUrl); } catch (e) { feed = null; }
+    } else if (!onDevice) {
+      feed = PreviewBridge.sampleMetrics();
+      sample = true;
+    }
+    $("metricsBadge").hidden = !sample;
+    $("metricsBadge").textContent = "Sample data";
+    if (!feed || !Array.isArray(feed.metrics) || !feed.metrics.length) {
+      $("metricsUpdated").textContent = "";
+      $("metricRow").innerHTML = `<div class="empty" style="grid-column: 1 / -1">` +
+        (config.metricsUrl ? "Can't reach the Mac mini right now." : "Connect your Mac mini to show your daily metrics here.") + `</div>`;
+      return;
+    }
+    $("metricsUpdated").textContent = feed.updated
+      ? "updated " + new Date(feed.updated).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }) : "";
+    const C = 2 * Math.PI * 40;
+    $("metricRow").innerHTML = feed.metrics.slice(0, 5).map((m) => {
+      const hasTarget = typeof m.target === "number" && m.target > 0;
+      const pct = hasTarget ? Math.max(0, Math.min(1, m.value / m.target)) : 0;
+      const ring = hasTarget
+        ? `<svg viewBox="0 0 96 96"><circle class="track" cx="48" cy="48" r="40"/>` +
+          `<circle class="fill" cx="48" cy="48" r="40" stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - pct)}"/></svg>` : "";
+      const value = typeof m.value === "number" ? m.value.toLocaleString("en-GB") : esc(m.value);
+      return `<div class="metric ${pct >= 1 ? "done" : ""}">${ring}<div>` +
+        `<div class="m-label">${esc(m.label)}</div>` +
+        `<div class="m-value">${value}<span class="m-unit">${esc(m.unit || "")}</span></div>` +
+        (hasTarget ? `<div class="m-target">of ${m.target.toLocaleString("en-GB")}</div>` : "") +
+        `</div></div>`;
+    }).join("");
+  }
+
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+  }
+
+  // ---------- Apps ----------
+  let apps = [];
+  const ICONS = {
+    grid: `<svg viewBox="0 0 64 64"><rect x="8" y="8" width="18" height="18"/><rect x="38" y="8" width="18" height="18"/><rect x="8" y="38" width="18" height="18"/><rect x="38" y="38" width="18" height="18"/></svg>`,
+    theme: `<svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="22"/><path d="M32 10 A22 22 0 0 1 32 54 Z" fill="currentColor"/></svg>`,
+    replay: `<svg viewBox="0 0 64 64"><path d="M14 32 A18 18 0 1 0 20 18"/><path d="M12 10 L20 18 L10 22"/></svg>`,
+    settings: `<svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="9"/><path d="M32 6v10M32 48v10M6 32h10M48 32h10M13.6 13.6l7 7M43.4 43.4l7 7M13.6 50.4l7-7M43.4 20.6l7-7"/></svg>`
+  };
+
+  function appTile(app) {
+    const b = document.createElement("button");
+    b.className = "tile focusable" + (app.banner ? "" : " icon-only");
+    b.style.backgroundImage = `url("${app.icon}")`;
+    b.innerHTML = `<span class="label">${esc(app.label)}</span>`;
+    b.onclick = () => { Sfx.select(); if (!native.launch(app.pkg)) toast("Couldn't open " + app.label); };
+    return b;
+  }
+  function utilTile(icon, label, action) {
+    const b = document.createElement("button");
+    b.className = "tile util focusable";
+    b.innerHTML = ICONS[icon] + `<span class="label">${label}</span>`;
+    b.onclick = () => { Sfx.select(); action(); };
+    return b;
+  }
+
+  function loadApps() {
+    try { apps = JSON.parse(native.getApps()); } catch (e) { apps = []; }
+    apps.sort((a, b) => a.label.localeCompare(b.label));
+    const byPkg = Object.fromEntries(apps.map((a) => [a.pkg, a]));
+    const pinned = config.pinnedApps.map((p) => byPkg[p]).filter(Boolean);
+    const rest = apps.filter((a) => !config.pinnedApps.includes(a.pkg) && !config.hiddenApps.includes(a.pkg));
+    const row = $("appRow");
+    row.innerHTML = "";
+    [...pinned, ...rest].slice(0, 8).forEach((a) => row.appendChild(appTile(a)));
+    row.appendChild(utilTile("grid", "All apps", openDrawer));
+    row.appendChild(utilTile("theme", THEMES[theme === "fengwei" ? "spartan" : "fengwei"], switchTheme));
+    row.appendChild(utilTile("replay", "Replay intro", playIntro));
+    row.appendChild(utilTile("settings", "Settings", () => native.openSettings()));
+  }
+
+  function openDrawer() {
+    const grid = $("drawerGrid");
+    grid.innerHTML = "";
+    apps.forEach((a) => grid.appendChild(appTile(a)));
+    $("drawer").hidden = false;
+    grid.scrollTop = 0;
+    focusFirst();
+  }
+  function closeDrawer() {
+    $("drawer").hidden = true;
+    focusFirst();
+  }
+
+  // ---------- Remote control navigation ----------
+  function scope() { return $("drawer").hidden ? $("appRow") : $("drawerGrid"); }
+  function focusFirst() {
+    const first = scope().querySelector(".focusable");
+    if (first) first.focus({ preventScroll: true });
+  }
+  function move(dir) {
+    const items = [...scope().querySelectorAll(".focusable")];
+    const cur = document.activeElement;
+    if (!items.includes(cur)) return focusFirst();
+    const a = cur.getBoundingClientRect();
+    const ax = a.left + a.width / 2, ay = a.top + a.height / 2;
+    let best = null, bestScore = Infinity;
+    for (const el of items) {
+      if (el === cur) continue;
+      const r = el.getBoundingClientRect();
+      const dx = r.left + r.width / 2 - ax, dy = r.top + r.height / 2 - ay;
+      const along = { left: -dx, right: dx, up: -dy, down: dy }[dir];
+      if (along <= 1) continue;
+      const across = dir === "left" || dir === "right" ? Math.abs(dy) : Math.abs(dx);
+      const score = along + across * 2.5;
+      if (score < bestScore) { bestScore = score; best = el; }
+    }
+    if (!best) return;
+    best.focus({ preventScroll: true });
+    best.scrollIntoView({ block: "nearest", inline: "nearest" });
+    Sfx.tick();
+  }
+  const KEYS = { ArrowLeft: "left", ArrowRight: "right", ArrowUp: "up", ArrowDown: "down" };
+  document.addEventListener("keydown", (e) => {
+    Sfx.unlock();
+    if (Intro.playing) { Intro.skip(); e.preventDefault(); return; }
+    if (KEYS[e.key]) { move(KEYS[e.key]); e.preventDefault(); }
+    else if (e.key === "Escape" || e.key === "Backspace") { window.onBackKey(); e.preventDefault(); }
+    else if (e.key === "m") switchTheme(); // desktop preview stand-in for the Menu button
+  });
+
+  // ---------- Start ----------
+  async function start() {
+    if (config.remoteConfigUrl) {
+      try { Object.assign(config, await getJson(config.remoteConfigUrl)); } catch (e) {}
+    }
+    Sfx.configure({ sound: config.sound, volume: config.volume });
+    $("name").textContent = config.name;
+    applyTheme();
+    tickClock();
+    setInterval(tickClock, 15000);
+    loadApps();
+    refreshPrayers();
+    refreshMetrics();
+    setInterval(refreshMetrics, 5 * 60000);
+    if (new URLSearchParams(location.search).has("nointro")) {
+      document.body.classList.remove("intro-on");
+      focusFirst();
+    } else playIntro();
+  }
+
+  // ---------- Desktop preview stand-in for window.Android ----------
+  function PreviewBridge() {
+    const art = (label, c1, c2) => "data:image/svg+xml," + encodeURIComponent(
+      `<svg xmlns="http://www.w3.org/2000/svg" width="320" height="180"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">` +
+      `<stop offset="0" stop-color="${c1}"/><stop offset="1" stop-color="${c2}"/></linearGradient></defs>` +
+      `<rect width="320" height="180" fill="url(#g)"/><text x="160" y="104" font-family="sans-serif" font-size="34" ` +
+      `font-weight="700" fill="#fff" text-anchor="middle">${label}</text></svg>`);
+    const list = [
+      ["com.amazon.firetv.youtube", "YouTube", "#c4302b", "#5c0d0b"],
+      ["com.netflix.ninja", "Netflix", "#141414", "#5a0a0e"],
+      ["com.amazon.firebat", "Prime Video", "#0f79af", "#06263d"],
+      ["com.disney.disneyplus", "Disney+", "#113ccf", "#0a1a4f"],
+      ["uk.co.bbc.iplayer", "BBC iPlayer", "#e2007a", "#3d0b2b"],
+      ["com.spotify.tv.android", "Spotify", "#1db954", "#0b3a1c"],
+      ["org.xbmc.kodi", "Kodi", "#17b2e7", "#0b3240"]
+    ];
+    return {
+      getApps: () => JSON.stringify(list.map(([pkg, label, c1, c2]) => ({ pkg, label, banner: true, icon: art(label, c1, c2) }))),
+      launch: (pkg) => { toast("Would open " + pkg); return true; },
+      openSettings: () => toast("Would open Fire TV settings"),
+      fetch: () => {}
+    };
+  }
+  PreviewBridge.samplePrayers = (key) => ({
+    key, sample: true, hijri: "",
+    timings: { Fajr: "05:28", Sunrise: "07:02", Dhuhr: "11:52", Asr: "14:31", Maghrib: "16:59", Isha: "18:24" }
+  });
+  PreviewBridge.sampleMetrics = () => ({
+    updated: new Date().toISOString(),
+    metrics: [
+      { label: "Steps", value: 7420, target: 10000 },
+      { label: "Sleep", value: 6.8, unit: "h", target: 8 },
+      { label: "Qur'an", value: 4, unit: "pages", target: 5 },
+      { label: "Water", value: 1.6, unit: "L", target: 2.5 },
+      { label: "Prayers", value: 3, unit: "/ 5", target: 5 }
+    ]
+  });
+  start();
+})();

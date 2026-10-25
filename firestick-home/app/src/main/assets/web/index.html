@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Welcome Home</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-theme="fengwei" class="intro-on">
+  <div id="stage">
+    <canvas id="fx" aria-hidden="true"></canvas>
+
+    <main id="home">
+      <header class="top">
+        <div class="greet">
+          <div class="eyebrow" id="eyebrow"></div>
+          <h1 class="welcome"><span class="w1">Welcome,</span> <span class="w2" id="name"></span></h1>
+          <div class="dates"><span id="gregDate"></span><span class="dot" id="hijriSep" hidden>·</span><span id="hijriDate"></span></div>
+        </div>
+        <div class="clock">
+          <div class="time" id="clock">--:--</div>
+          <div class="next" id="nextPrayer"></div>
+        </div>
+      </header>
+
+      <section class="panel">
+        <div class="panel-title">Prayer times <span class="place" id="prayerPlace"></span><span class="badge" id="prayerBadge" hidden></span></div>
+        <div class="prayer-row" id="prayerRow"></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-title">Today <span class="place" id="metricsUpdated"></span><span class="badge" id="metricsBadge" hidden></span></div>
+        <div class="metric-row" id="metricRow"></div>
+      </section>
+
+      <nav class="app-row" id="appRow" aria-label="Apps"></nav>
+    </main>
+
+    <div id="drawer" hidden>
+      <div class="drawer-title">All apps</div>
+      <div class="drawer-grid" id="drawerGrid"></div>
+    </div>
+
+    <div id="intro" class="intro" hidden></div>
+    <div id="toast" aria-live="polite"></div>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="sound.js"></script>
+  <script src="intro.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

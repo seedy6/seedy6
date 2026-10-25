@@ -1,0 +1,10 @@
+{
+  "updated": "2026-10-25T14:00:00Z",
+  "metrics": [
+    { "label": "Steps", "value": 7420, "target": 10000 },
+    { "label": "Sleep", "value": 6.8, "unit": "h", "target": 8 },
+    { "label": "Qur'an", "value": 4, "unit": "pages", "target": 5 },
+    { "label": "Water", "value": 1.6, "unit": "L", "target": 2.5 },
+    { "label": "Prayers", "value": 3, "unit": "/ 5", "target": 5 }
+  ]
+}

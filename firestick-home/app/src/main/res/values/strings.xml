@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Welcome Home</string>
+    <string name="redirect_label">Welcome Home: Home button</string>
+    <string name="redirect_description">Opens Welcome Home whenever the Fire TV home screen appears, so the Home button lands on your screen instead of Amazon\'s.</string>
+</resources>
