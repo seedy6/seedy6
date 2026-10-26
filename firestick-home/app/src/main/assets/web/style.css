@@ -4,6 +4,7 @@
 @font-face { font-family: "Rajdhani"; font-weight: 600; src: url(fonts/rajdhani-latin-600-normal.woff2) format("woff2"); }
 @font-face { font-family: "Rajdhani"; font-weight: 700; src: url(fonts/rajdhani-latin-700-normal.woff2) format("woff2"); }
 @font-face { font-family: "Feng Wei Brush"; src: url(fonts/ma-shan-zheng-fengwei.woff2) format("woff2"); } /* only 冯威 */
+@font-face { font-family: "Amiri Sayings"; src: url(fonts/amiri-sayings.woff2) format("woff2"); } /* only the sayings' letters */
 @font-face { font-family: "Bebas Neue"; font-weight: 400; src: url(fonts/bebas-neue-latin-400-normal.woff2) format("woff2"); }
 
 :root, [data-theme="fengwei"] {
@@ -87,13 +88,21 @@ body { font-family: var(--body); color: var(--text); font-weight: 600; }
 
 /* ---------- Home ---------- */
 #home {
-  position: absolute; top: 54px; right: 96px; bottom: 20px; left: 96px; display: flex; flex-direction: column; gap: 34px;
+  position: absolute; top: 40px; right: 96px; bottom: 12px; left: 96px; display: flex; flex-direction: column; gap: 22px;
   transition: opacity 0.6s ease, transform 0.6s ease;
 }
 body.intro-on #home { opacity: 0; transform: translateY(18px); }
 
+/* Saying of the day: English on the left, Arabic on the right, a gold rule between. */
+.saying { display: grid; grid-template-columns: 1fr 2px 1fr; align-items: center; gap: 40px; padding-bottom: 14px;
+  border-bottom: 1px solid var(--line); }
+.saying .s-text { font-size: 25px; line-height: 1.3; color: var(--text); }
+.saying .s-src { margin-top: 6px; font-size: 18px; letter-spacing: 0.24em; text-transform: uppercase; color: var(--accent); }
+.saying .s-rule { align-self: stretch; background: linear-gradient(180deg, transparent, var(--accent-2), transparent); }
+.saying .s-ar { font-family: "Amiri Sayings", "Noto Naskh Arabic", serif; font-size: 34px; line-height: 1.5; text-align: right;
+  color: var(--accent-2); }
 .top { display: flex; justify-content: space-between; align-items: flex-end; }
-.eyebrow { font-size: 30px; color: var(--muted); letter-spacing: 0.18em; text-transform: uppercase; }
+.eyebrow { font-size: 24px; color: var(--muted); letter-spacing: 0.18em; text-transform: uppercase; }
 .welcome {
   font-family: var(--display); font-weight: 900; font-size: 108px; line-height: 1; letter-spacing: var(--display-spacing);
   margin: 6px 0 12px; text-transform: uppercase;
@@ -106,9 +115,9 @@ body.intro-on #home { opacity: 0; transform: translateY(18px); }
 }
 [data-theme="spartan"] .welcome { font-size: 84px; }
 [data-theme="spartan"] .welcome .w2 { background: linear-gradient(180deg, #e9fff3, var(--accent-2) 60%, #4fae2a); -webkit-background-clip: text; background-clip: text; }
-.dates { font-size: 32px; color: var(--muted); display: flex; gap: 16px; }
+.dates { font-size: 28px; color: var(--muted); display: flex; gap: 16px; }
 .dates .dot { color: var(--accent); }
-.event { --ev: var(--accent); display: flex; align-items: baseline; gap: 16px; margin-top: 12px; font-size: 28px; max-width: 1180px; }
+.event { --ev: var(--accent); display: flex; align-items: baseline; gap: 16px; margin-top: 8px; font-size: 25px; max-width: 1180px; }
 .event.ev-celebration { --ev: var(--accent-2); }
 .event.ev-mourning { --ev: #e0605a; }
 .event .ev-when { flex: none; padding: 3px 12px; font-size: 20px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ev); border: 1px solid var(--ev); }
@@ -121,7 +130,7 @@ body.intro-on #home { opacity: 0; transform: translateY(18px); }
 
 .panel {
   position: relative; background: var(--panel); border: 1px solid var(--line);
-  padding: 20px 30px 24px;
+  padding: 14px 30px 16px;
 }
 [data-theme="spartan"] .panel {
   clip-path: polygon(0 0, calc(100% - 28px) 0, 100% 28px, 100% 100%, 28px 100%, 0 calc(100% - 28px));
@@ -129,7 +138,7 @@ body.intro-on #home { opacity: 0; transform: translateY(18px); }
 [data-theme="fengwei"] .panel { border-width: 0 0 0 4px; border-left-color: var(--accent); }
 .panel-title {
   font-size: 24px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--accent);
-  margin-bottom: 14px; display: flex; align-items: center; gap: 18px;
+  margin-bottom: 8px; display: flex; align-items: center; gap: 18px;
 }
 .panel-title .place { color: var(--muted); letter-spacing: 0.1em; font-size: 22px; }
 .badge {
@@ -148,7 +157,7 @@ body.intro-on #home { opacity: 0; transform: translateY(18px); }
 
 .weather { display: flex; align-items: center; gap: 44px; }
 .wx-now { display: flex; align-items: center; gap: 26px; }
-.wx-icon .wx-svg { width: 104px; height: 104px; }
+.wx-icon .wx-svg { width: 84px; height: 84px; }
 .wx-svg { fill: none; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; overflow: visible; }
 .wx-svg .wx-sun, .wx-svg .wx-moon { stroke: var(--accent-2); }
 .wx-svg .wx-cloud { stroke: var(--text); }
@@ -157,15 +166,15 @@ body.intro-on #home { opacity: 0; transform: translateY(18px); }
 .wx-cond { font-size: 32px; text-transform: uppercase; letter-spacing: 0.14em; }
 .wx-sub { font-size: 24px; color: var(--muted); margin-top: 6px; }
 .wx-sep { width: 1px; align-self: stretch; background: var(--line); }
-.wx-day { display: flex; flex-direction: column; gap: 8px; font-family: var(--display); font-size: 30px; font-variant-numeric: tabular-nums; }
+.wx-day { display: flex; flex-direction: column; gap: 4px; font-family: var(--display); font-size: 30px; font-variant-numeric: tabular-nums; }
 .wx-day .wx-k { display: inline-block; width: 92px; font-family: var(--body); font-size: 22px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
 .wx-hours { flex: 1; display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
 .wx-hour { text-align: center; }
 .wx-h-time { font-size: 22px; color: var(--muted); letter-spacing: 0.08em; }
-.wx-h-icon .wx-svg { width: 50px; height: 50px; margin: 4px auto 2px; display: block; }
+.wx-h-icon .wx-svg { width: 42px; height: 42px; margin: 2px auto 0; display: block; }
 .wx-h-temp { font-family: var(--display); font-size: 30px; }
 .wx-h-rain { font-size: 20px; color: var(--accent); }
-[data-theme="spartan"] .wx-temp, [data-theme="versus"] .wx-temp { font-size: 76px; }
+[data-theme="spartan"] .wx-temp, [data-theme="versus"] .wx-temp { font-size: 64px; }
 [data-theme="spartan"] .wx-h-temp, [data-theme="versus"] .wx-h-temp, [data-theme="spartan"] .wx-day, [data-theme="versus"] .wx-day { font-size: 26px; }
 
 .metric-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 22px; }
@@ -181,7 +190,7 @@ body.intro-on #home { opacity: 0; transform: translateY(18px); }
 .metric .m-target { font-size: 22px; color: var(--muted); }
 
 /* ---------- Apps ---------- */
-.app-row { display: flex; gap: 28px; margin-top: auto; padding: 18px 8px 50px; overflow: hidden; scroll-behavior: smooth; }
+.app-row { display: flex; gap: 28px; margin-top: auto; padding: 16px 8px 46px; overflow: hidden; scroll-behavior: smooth; }
 .tile {
   position: relative; flex: none; width: 288px; height: 162px; border: 0; outline: none; cursor: pointer;
   background: #14141a center / cover no-repeat; color: var(--text); font: inherit;
@@ -318,11 +327,11 @@ body.intro-on #home { opacity: 0; transform: translateY(18px); }
 }
 
 /* ---------- Versus theme: Spartan cyan on the left, Feng Wei crimson on the right ---------- */
-[data-theme="versus"] .welcome { font-size: 84px; }
+[data-theme="versus"] .welcome { font-size: 70px; }
 [data-theme="versus"] .welcome .w2 { background: linear-gradient(180deg, #ffffff 0%, #d9e2e8 42%, #7d8891 52%, #c9b48a 72%, #f6dfa6 100%); -webkit-background-clip: text; background-clip: text;
   filter: drop-shadow(-2px 0 0 rgba(53, 224, 255, 0.5)) drop-shadow(2px 0 0 rgba(255, 60, 40, 0.5)); }
-[data-theme="versus"] .clock .time { font-size: 104px; }
-[data-theme="versus"] .prayer .p-time, [data-theme="versus"] .metric .m-value { font-size: 42px; }
+[data-theme="versus"] .clock .time { font-size: 88px; }
+[data-theme="versus"] .prayer .p-time, [data-theme="versus"] .metric .m-value { font-size: 38px; }
 [data-theme="versus"] .panel {
   border-width: 0 0 0 4px; border-image: linear-gradient(180deg, #35e0ff, #e0302a) 1;
   clip-path: polygon(0 0, calc(100% - 28px) 0, 100% 28px, 100% 100%, 0 100%);

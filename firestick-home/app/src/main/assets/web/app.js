@@ -185,11 +185,24 @@
     return (window.SHIA_EVENTS || []).filter((e) => e.month === h.month && (e.day === h.day || (e.day === "last" && isLastDay)));
   }
 
+  // One saying a day, in order, the same all day (sayings.js).
+  function renderSaying(now) {
+    const list = window.NAHJ_SAYINGS || [];
+    if (!list.length) return;
+    const dayNumber = Math.floor((now.getTime() - now.getTimezoneOffset() * 60000) / 86400000);
+    const s = list[dayNumber % list.length];
+    $("sayingAr").textContent = s.ar;
+    $("sayingEn").textContent = s.en;
+    $("sayingSrc").textContent = "Imam Ali · Nahj al-Balagha · " + (typeof s.n === "number" ? "Saying " + s.n : s.n);
+    $("saying").hidden = false;
+  }
+
   let islamicDay = "";
   function renderIslamic(now) {
     const key = dayKey(now);
     if (key === islamicDay) return; // only changes at midnight
     islamicDay = key;
+    renderSaying(now);
     const h = hijri(now);
     $("hijriDate").textContent = h ? `${h.day} ${HIJRI_MONTHS[h.month - 1]} ${h.year}` : "";
     $("hijriSep").hidden = !h;
