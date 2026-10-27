@@ -65,6 +65,7 @@
   // ---------- Intro ----------
   let lastSeen = Date.now();
   function playIntro() {
+    $("gate").hidden = true;
     $("drawer").hidden = true;
     Ambient.stop(); // the intro covers it; no point drawing it underneath
     Intro.play(theme, config.name, () => { Ambient.start(theme); focusFirst(); });
@@ -90,18 +91,41 @@
     refreshPrayers();
     if (awayMin >= config.introAfterMinutes && !Intro.playing) playIntro();
   };
-  // The Fire Stick woke from sleep (the projector was switched on): play the intro.
+  // The Fire Stick woke from sleep (the projector was switched on). The projector may still be warming
+  // up, so wait on the waiting screen and play the intro when a key is pressed.
   window.onWake = () => {
     lastSeen = Date.now();
-    if (!Intro.playing) playIntro();
+    if (!Intro.playing) showGate();
   };
+
+  // ---------- Waiting screen ----------
+  function showGate() {
+    $("drawer").hidden = true;
+    $("photoView").hidden = true;
+    $("gateName").textContent = config.name;
+    document.body.classList.add("intro-on"); // keep the home screen out of sight behind it
+    Ambient.stop();
+    $("gate").hidden = false;
+  }
+  // Enter from the waiting screen, with the intro (OK, ▲, Home) or straight to the home screen (Back).
+  function enterFromGate(withIntro) {
+    if ($("gate").hidden) return;
+    Sfx.unlock();
+    if (withIntro) return playIntro();
+    $("gate").hidden = true;
+    document.body.classList.remove("intro-on");
+    Ambient.start(theme);
+    focusFirst();
+  }
   window.onHomePressed = () => {
-    if (!$("webApp").hidden) closeWebApp();
+    if (!$("gate").hidden) enterFromGate(true);
+    else if (!$("webApp").hidden) closeWebApp();
     else if (!$("drawer").hidden) closeDrawer();
     else focusFirst();
   };
   window.onBackKey = () => {
-    if (Intro.playing) Intro.skip();
+    if (!$("gate").hidden) enterFromGate(false);
+    else if (Intro.playing) Intro.skip();
     else if (!$("homeSetup").hidden) { $("homeSetup").hidden = true; focusFirst(); }
     else if (!$("photoView").hidden) $("photoView").hidden = true;
     else if (!$("webApp").hidden) closeWebApp();
@@ -152,6 +176,8 @@
     const h = now.getHours();
     $("eyebrow").textContent = h < 5 ? "Peaceful night" : h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
     $("gregDate").textContent = now.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
+    $("gateTime").textContent = $("clock").textContent;
+    $("gateDate").textContent = $("gregDate").textContent;
     renderNextPrayer(now);
     renderIslamic(now);
   }
@@ -466,15 +492,10 @@
     };
     return b;
   }
-  // A photo for a limited time: `minutes` from when it first appears on this TV, never after notAfter.
+  // A photo as a round tile at the far end of the apps row; selecting it shows it full-screen.
   function addPhotoTile(row) {
     const p = config.photoTile;
-    if (!p || Date.now() > Date.parse(p.notAfter)) return;
-    const key = "photoTile:" + p.tile;
-    const first = store.get(key) || Date.now();
-    store.set(key, first);
-    const left = first + p.minutes * 60000 - Date.now();
-    if (left <= 0) return;
+    if (!p) return;
     const b = document.createElement("button");
     b.className = "tile photo focusable";
     b.innerHTML = `<span class="ph-ring"><img src="${p.tile}" alt=""></span>`;
@@ -484,11 +505,6 @@
       $("photoView").hidden = false;
     };
     row.appendChild(b);
-    setTimeout(() => {
-      if (document.activeElement === b) focusFirst();
-      b.remove();
-      $("photoView").hidden = true;
-    }, left);
   }
 
   function utilTile(icon, label, action) {
@@ -515,7 +531,6 @@
     const shown = config.onlyPinnedApps && pinned.length ? pinned : [...pinned, ...rest];
     shown.slice(0, 8).forEach((a) => row.appendChild(appTile(a)));
     (config.webApps || []).filter((w) => w.url).forEach((w) => row.appendChild(webTile(w)));
-    addPhotoTile(row);
     row.appendChild(utilTile("grid", "All apps", openDrawer));
     row.appendChild(utilTile("theme", "Theme", switchTheme));
     row.appendChild(utilTile("replay", "Replay intro", playIntro));
@@ -541,6 +556,7 @@
       }));
     }
     row.appendChild(utilTile("settings", "Settings", () => native.openSettings()));
+    addPhotoTile(row);
   }
 
   // Web apps run in a full-screen frame over the home screen; Back or Home closes it.
@@ -559,6 +575,7 @@
   document.querySelector(".drawer-title").onclick = () => closeDrawer();
   $("homeSetup").onclick = () => { $("homeSetup").hidden = true; focusFirst(); };
   $("photoView").onclick = () => { $("photoView").hidden = true; };
+  $("gate").onclick = () => enterFromGate(true);
   $("intro").onclick = () => Intro.playing && Intro.skip();
 
   // Fire TV hides third-party accessibility switches, so show how to turn it on with ADB instead.
@@ -612,7 +629,11 @@
   }
   const KEYS = { ArrowLeft: "left", ArrowRight: "right", ArrowUp: "up", ArrowDown: "down" };
   document.addEventListener("keydown", (e) => {
-    if (document.getElementById("startGate")) return;
+    if (!$("gate").hidden) {
+      e.preventDefault();
+      enterFromGate(!(e.key === "Escape" || e.key === "Backspace"));
+      return;
+    }
     Sfx.unlock();
     if (Intro.playing) { Intro.skip(); e.preventDefault(); return; }
     if (!$("webApp").hidden) return; // keys belong to the web app; Back is handled natively
@@ -643,17 +664,12 @@
       focusFirst();
     } else if (params.has("hold")) {
       // Wait for replayIntro() (used when recording demos).
-    } else if (onDevice) preload().then(() => { fit(); playIntro(); });
-    else showStartButton(); // browsers only allow sound after a tap
-  }
-
-  function showStartButton() {
-    const gate = document.createElement("button");
-    gate.id = "startGate";
-    gate.innerHTML = `<span class="g-play">Play intro</span><span class="g-sub">Sound on · or use the arrow keys, Enter and Esc</span>`;
-    gate.onclick = () => { gate.remove(); Sfx.unlock(); playIntro(); };
-    $("stage").appendChild(gate);
-    gate.focus();
+    } else {
+      // Start on the waiting screen: the projector may still be warming up, and browsers only allow
+      // sound after a key press or tap anyway.
+      showGate();
+      if (onDevice) preload();
+    }
   }
 
   // ---------- Desktop preview stand-in for window.Android ----------

@@ -248,15 +248,38 @@ body.intro-on #home { opacity: 0; transform: translateY(18px); }
 #webApp { position: absolute; top: 0; right: 0; bottom: 0; left: 0; z-index: 8; background: #000; }
 #webApp iframe { width: 100%; height: 100%; border: 0; background: #fff; }
 
-#startGate {
-  position: absolute; top: 0; right: 0; bottom: 0; left: 0; z-index: 30; border: 0; cursor: pointer;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px;
-  background: radial-gradient(700px 420px at 50% 50%, rgba(120, 20, 14, 0.35), transparent 70%), #020203; color: #eef6fa;
-}
-#startGate .g-play { font-family: "Orbitron", sans-serif; font-weight: 400; font-size: 64px; letter-spacing: 0.6em; padding-left: 0.6em; text-transform: uppercase;
-  padding: 28px 40px 28px calc(40px + 0.6em); border: 1px solid rgba(242, 184, 75, 0.6); box-shadow: 0 0 40px rgba(242, 184, 75, 0.15); }
-#startGate:focus .g-play, #startGate:hover .g-play { border-color: #f2b84b; box-shadow: 0 0 60px rgba(242, 184, 75, 0.35); }
-#startGate .g-sub { font-size: 28px; letter-spacing: 0.2em; text-transform: uppercase; color: #93a7b3; }
+/* ---------- Waiting screen: shown at start-up and on wake until a key is pressed ---------- */
+#gate { position: absolute; top: 0; right: 0; bottom: 0; left: 0; z-index: 30; overflow: hidden; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; background: #010203; color: #eef6fa; }
+#gate .gt-glow { position: absolute; top: 0; right: 0; bottom: 0; left: 0; will-change: opacity; animation: gtBreathe 7s ease-in-out infinite alternate; }
+#gate .gt-l { background: radial-gradient(760px 640px at 18% 52%, rgba(53, 224, 255, 0.16), transparent 70%); }
+#gate .gt-r { background: radial-gradient(760px 640px at 82% 48%, rgba(224, 48, 42, 0.2), transparent 70%); animation-delay: -3.5s; }
+#gate .gt-line { position: absolute; left: 0; right: 0; top: 50%; height: 2px; margin-top: -40px; will-change: opacity, transform;
+  background: linear-gradient(90deg, transparent, rgba(110, 220, 255, 0.7) 22%, #fff6e8 50%, rgba(255, 110, 70, 0.7) 78%, transparent);
+  box-shadow: 0 0 16px 2px rgba(220, 235, 255, 0.35); animation: gtLine 5s ease-in-out infinite alternate; }
+#gate .gt-clock { position: absolute; top: 60px; right: 96px; text-align: right; }
+#gate .gt-time { font-family: "Orbitron", sans-serif; font-weight: 700; font-size: 60px; letter-spacing: 0.06em; }
+#gate .gt-date { margin-top: 6px; font-size: 24px; letter-spacing: 0.12em; color: #93a7b3; }
+#gate .gt-center { position: relative; display: flex; flex-direction: column; align-items: center; }
+#gate .gt-eyebrow { font-family: "Orbitron", sans-serif; font-weight: 400; font-size: 26px; letter-spacing: 0.8em; padding-left: 0.8em;
+  text-transform: uppercase; color: #a9bcc7; }
+#gate .gt-name { margin-top: 18px; font-family: "Orbitron", sans-serif; font-weight: 900; font-size: 150px; line-height: 1; letter-spacing: 0.14em;
+  padding-left: 0.14em; text-transform: uppercase; color: transparent;
+  background: linear-gradient(180deg, #ffffff 0%, #d9e2e8 42%, #7d8891 52%, #c9b48a 72%, #f6dfa6 100%); -webkit-background-clip: text; background-clip: text;
+  filter: drop-shadow(-3px 0 0 rgba(53, 224, 255, 0.5)) drop-shadow(3px 0 0 rgba(255, 60, 40, 0.5)); }
+#gate .gt-press { margin-top: 90px; display: flex; flex-direction: column; align-items: center; gap: 26px; }
+#gate .gt-key { position: relative; width: 120px; height: 120px; }
+#gate .gt-ring { position: absolute; top: 0; left: 0; width: 120px; height: 120px; will-change: transform; animation: spin 16s linear infinite; }
+#gate .gt-ring circle { fill: none; stroke: rgba(127, 233, 255, 0.45); stroke-width: 1.5; }
+#gate .gt-ring .gt-dash { stroke: rgba(242, 184, 75, 0.8); stroke-width: 2; stroke-dasharray: 3 9; }
+#gate .gt-chev { position: absolute; left: 30px; top: 30px; width: 60px; height: 60px; will-change: transform; animation: gtNudge 1.8s ease-in-out infinite; }
+#gate .gt-chev path { fill: none; stroke: #f2b84b; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+#gate .gt-hint { font-size: 26px; letter-spacing: 0.42em; padding-left: 0.42em; text-transform: uppercase; color: #c9d6dd;
+  will-change: opacity; animation: gtPulse 2.4s ease-in-out infinite; }
+@keyframes gtBreathe { from { opacity: 0.55; } to { opacity: 1; } }
+@keyframes gtLine { from { opacity: 0.35; transform: scaleX(0.75); } to { opacity: 0.9; transform: scaleX(1); } }
+@keyframes gtNudge { 0%, 100% { transform: translateY(4px); } 50% { transform: translateY(-6px); } }
+@keyframes gtPulse { 0%, 100% { opacity: 0.45; } 50% { opacity: 1; } }
 .drawer-title { cursor: pointer; }
 
 #toast {

@@ -72,6 +72,23 @@
 
     <div id="webApp" hidden><iframe id="webFrame" title="Web app" allow="autoplay; fullscreen"></iframe></div>
     <div id="intro" class="intro" hidden></div>
+
+    <div id="gate" hidden>
+      <div class="gt-glow gt-l"></div><div class="gt-glow gt-r"></div>
+      <div class="gt-line"></div>
+      <div class="gt-clock"><div class="gt-time" id="gateTime"></div><div class="gt-date" id="gateDate"></div></div>
+      <div class="gt-center">
+        <div class="gt-eyebrow">Welcome home</div>
+        <div class="gt-name" id="gateName"></div>
+        <div class="gt-press">
+          <div class="gt-key">
+            <svg class="gt-ring" viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="56"/><circle class="gt-dash" cx="60" cy="60" r="48"/></svg>
+            <svg class="gt-chev" viewBox="0 0 40 40" aria-hidden="true"><path d="M10 26 L20 14 L30 26"/></svg>
+          </div>
+          <div class="gt-hint">Press ▲ or OK to enter</div>
+        </div>
+      </div>
+    </div>
     <div id="toast" aria-live="polite"></div>
   </div>
 
