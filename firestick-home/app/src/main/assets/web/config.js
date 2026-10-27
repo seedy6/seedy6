@@ -44,6 +44,10 @@ window.HOME_CONFIG = {
     "com.google.android.youtube.tv": ["label:SmartTube"]
   },
 
+  // A photo shown as a round tile in the apps row for `minutes` from when the TV first shows it,
+  // and never after `notAfter`. Set to null to turn it off.
+  photoTile: { tile: "photos/special-tile.jpg", full: "photos/special-full.jpg", minutes: 10, notAfter: "2026-10-27T23:06:38Z" },
+
   // Web apps (for example from the Mac mini) opened full-screen on the TV; Back returns home.
   // A tile only appears once its url is set.
   webApps: [

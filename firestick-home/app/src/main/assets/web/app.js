@@ -103,6 +103,7 @@
   window.onBackKey = () => {
     if (Intro.playing) Intro.skip();
     else if (!$("homeSetup").hidden) { $("homeSetup").hidden = true; focusFirst(); }
+    else if (!$("photoView").hidden) $("photoView").hidden = true;
     else if (!$("webApp").hidden) closeWebApp();
     else if (!$("drawer").hidden) closeDrawer();
   };
@@ -465,6 +466,31 @@
     };
     return b;
   }
+  // A photo for a limited time: `minutes` from when it first appears on this TV, never after notAfter.
+  function addPhotoTile(row) {
+    const p = config.photoTile;
+    if (!p || Date.now() > Date.parse(p.notAfter)) return;
+    const key = "photoTile:" + p.tile;
+    const first = store.get(key) || Date.now();
+    store.set(key, first);
+    const left = first + p.minutes * 60000 - Date.now();
+    if (left <= 0) return;
+    const b = document.createElement("button");
+    b.className = "tile photo focusable";
+    b.innerHTML = `<span class="ph-ring"><img src="${p.tile}" alt=""></span>`;
+    b.onclick = () => {
+      Sfx.select();
+      $("photoFull").src = p.full;
+      $("photoView").hidden = false;
+    };
+    row.appendChild(b);
+    setTimeout(() => {
+      if (document.activeElement === b) focusFirst();
+      b.remove();
+      $("photoView").hidden = true;
+    }, left);
+  }
+
   function utilTile(icon, label, action) {
     const b = document.createElement("button");
     b.className = "tile util focusable";
@@ -489,6 +515,7 @@
     const shown = config.onlyPinnedApps && pinned.length ? pinned : [...pinned, ...rest];
     shown.slice(0, 8).forEach((a) => row.appendChild(appTile(a)));
     (config.webApps || []).filter((w) => w.url).forEach((w) => row.appendChild(webTile(w)));
+    addPhotoTile(row);
     row.appendChild(utilTile("grid", "All apps", openDrawer));
     row.appendChild(utilTile("theme", "Theme", switchTheme));
     row.appendChild(utilTile("replay", "Replay intro", playIntro));
@@ -531,6 +558,7 @@
 
   document.querySelector(".drawer-title").onclick = () => closeDrawer();
   $("homeSetup").onclick = () => { $("homeSetup").hidden = true; focusFirst(); };
+  $("photoView").onclick = () => { $("photoView").hidden = true; };
   $("intro").onclick = () => Intro.playing && Intro.skip();
 
   // Fire TV hides third-party accessibility switches, so show how to turn it on with ADB instead.
