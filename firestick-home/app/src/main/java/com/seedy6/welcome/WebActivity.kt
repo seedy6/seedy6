@@ -20,6 +20,7 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.FrameLayout
 import android.widget.TextView
+import org.json.JSONArray
 
 /**
  * A full-screen browser for websites opened from the home screen (Tekken hub, Munajat...).
@@ -99,7 +100,7 @@ class WebActivity : Activity() {
             typeface = Typeface.MONOSPACE
             textSize = 11f
             setPadding(24, 16, 24, 16)
-            maxLines = 14
+            maxLines = 18
             visibility = View.GONE
         }
         root.addView(diag, FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.BOTTOM))
@@ -117,11 +118,26 @@ class WebActivity : Activity() {
         if (diag.visibility == View.VISIBLE) showDiagnostics(true)
     }
 
+    /**
+     * Notes what the page shows, its load state, the files it has loaded (with ms), and a fetch test of the page
+     * and its scripts: a file that stays "pending" is one the page is stuck waiting for.
+     */
     private fun notePageText() {
-        val js = "(function(){var m=document.querySelector('main')||document.body;" +
-            "return (document.title+' | '+(m?m.innerText:'')).replace(/\\s+/g,' ').slice(0,200);})()"
-        web.evaluateJavascript(js) { text ->
-            pageNote = text?.trim('"') ?: ""
+        val js = """(function(){
+            var m=document.querySelector('main')||document.body;
+            var text=(document.title+' | '+(m?m.innerText:'')).replace(/\s+/g,' ').slice(0,160);
+            var p=window.__tvProbe;
+            if(!p){p=window.__tvProbe={};
+              [location.href.split('#')[0]].concat([].slice.call(document.scripts).map(function(s){return s.src;}).filter(Boolean)).slice(0,4).forEach(function(u){
+                var k=u.split('/').pop()||'/',t0=Date.now();p[k]='pending';
+                fetch(u,{cache:'no-store'}).then(function(r){return r.text().then(function(b){p[k]=r.status+' '+b.length+'B '+(Date.now()-t0)+'ms';});},function(e){p[k]='failed '+e.message;});
+              });}
+            var loaded=performance.getEntriesByType('resource').map(function(e){return e.name.split('?')[0].split('/').pop()+' '+Math.round(e.duration);}).join(', ');
+            return text+'\nState: '+document.readyState+' · Fetch test: '+Object.keys(p).map(function(k){return k+' '+p[k];}).join(', ')+
+              '\nLoaded: '+(loaded||'nothing').slice(0,420);
+        })()"""
+        web.evaluateJavascript(js) { result ->
+            pageNote = try { JSONArray("[$result]").optString(0) } catch (e: Exception) { result ?: "" }
             if (diag.visibility == View.VISIBLE) showDiagnostics(true)
         }
     }
@@ -151,6 +167,8 @@ class WebActivity : Activity() {
         if (event.keyCode == KeyEvent.KEYCODE_MENU) {
             if (event.action == KeyEvent.ACTION_UP) {
                 notePageText()
+                // The fetch test needs a moment: refresh the panel once it has answered.
+                web.postDelayed({ notePageText() }, 3000)
                 showDiagnostics(diag.visibility != View.VISIBLE)
             }
             return true
