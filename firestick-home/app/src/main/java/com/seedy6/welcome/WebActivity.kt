@@ -4,21 +4,28 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
 import android.graphics.Color
+import android.graphics.Typeface
 import android.net.Uri
 import android.os.Bundle
+import android.view.Gravity
 import android.view.KeyEvent
 import android.view.View
 import android.view.ViewGroup
+import android.webkit.ConsoleMessage
 import android.webkit.WebChromeClient
+import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
+import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.FrameLayout
+import android.widget.TextView
 
 /**
  * A full-screen browser for websites opened from the home screen (Tekken hub, Munajat...).
  * Every page gets assets/tvnav.js, so the remote's arrows move between links and OK opens them.
  * Back goes to the previous page, and from the first page back to the home screen.
+ * Menu shows a diagnostics panel: page errors, failed requests and what the page is showing.
  */
 class WebActivity : Activity() {
     private lateinit var web: WebView
@@ -26,6 +33,9 @@ class WebActivity : Activity() {
     private var fullscreenView: View? = null
     private var fullscreenCallback: WebChromeClient.CustomViewCallback? = null
     private val navScript by lazy { assets.open("tvnav.js").bufferedReader().use { it.readText() } }
+    private lateinit var diag: TextView
+    private val problems = ArrayDeque<String>()
+    private var pageNote = ""
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -42,6 +52,16 @@ class WebActivity : Activity() {
             webViewClient = object : WebViewClient() {
                 override fun onPageFinished(view: WebView, url: String) {
                     view.evaluateJavascript(navScript, null)
+                    // A few seconds later, note what the page is showing (e.g. stuck on "Loading…").
+                    view.postDelayed({ notePageText() }, 6000)
+                }
+
+                override fun onReceivedHttpError(view: WebView, request: WebResourceRequest, response: WebResourceResponse) {
+                    report("HTTP ${response.statusCode} ${request.method} ${request.url}")
+                }
+
+                override fun onReceivedError(view: WebView, request: WebResourceRequest, error: WebResourceError) {
+                    report("Failed ${request.url}: ${error.description}")
                 }
 
                 override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
@@ -52,8 +72,16 @@ class WebActivity : Activity() {
                     return true
                 }
             }
-            // Lets videos go full-screen.
+            // Lets videos go full-screen, and passes page errors to the diagnostics panel.
             webChromeClient = object : WebChromeClient() {
+                override fun onConsoleMessage(message: ConsoleMessage): Boolean {
+                    if (message.messageLevel() == ConsoleMessage.MessageLevel.ERROR ||
+                        message.messageLevel() == ConsoleMessage.MessageLevel.WARNING) {
+                        report("${message.messageLevel()}: ${message.message()} (${message.sourceId().substringAfterLast('/')}:${message.lineNumber()})")
+                    }
+                    return false
+                }
+
                 override fun onShowCustomView(view: View, callback: CustomViewCallback) {
                     fullscreenView = view
                     fullscreenCallback = callback
@@ -65,9 +93,48 @@ class WebActivity : Activity() {
             }
         }
         root.addView(web, FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
+        diag = TextView(this).apply {
+            setBackgroundColor(Color.argb(225, 10, 6, 6))
+            setTextColor(Color.rgb(255, 214, 160))
+            typeface = Typeface.MONOSPACE
+            textSize = 11f
+            setPadding(24, 16, 24, 16)
+            maxLines = 14
+            visibility = View.GONE
+        }
+        root.addView(diag, FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.BOTTOM))
         setContentView(root)
         web.loadUrl(intent.getStringExtra(EXTRA_URL) ?: "about:blank")
+        // Starting a new page clears the panel's list.
+        problems.clear()
         web.requestFocus()
+    }
+
+    /** Adds a line to the diagnostics panel (shown with Menu, so a missing favicon doesn't cover the page). */
+    private fun report(line: String) = runOnUiThread {
+        problems.addLast(line.take(220))
+        while (problems.size > 8) problems.removeFirst()
+        if (diag.visibility == View.VISIBLE) showDiagnostics(true)
+    }
+
+    private fun notePageText() {
+        val js = "(function(){var m=document.querySelector('main')||document.body;" +
+            "return (document.title+' | '+(m?m.innerText:'')).replace(/\\s+/g,' ').slice(0,200);})()"
+        web.evaluateJavascript(js) { text ->
+            pageNote = text?.trim('"') ?: ""
+            if (diag.visibility == View.VISIBLE) showDiagnostics(true)
+        }
+    }
+
+    private fun showDiagnostics(show: Boolean) {
+        if (!show) { diag.visibility = View.GONE; return }
+        val chrome = Regex("Chrome/([0-9.]+)").find(web.settings.userAgentString)?.groupValues?.get(1) ?: "?"
+        diag.text = buildString {
+            append("Diagnostics (Menu to hide) · Chrome $chrome · ${web.url}\n")
+            append("Page shows: ").append(pageNote.ifEmpty { "(checking…)" }).append('\n')
+            if (problems.isEmpty()) append("No errors or failed requests.") else problems.forEach { append("• ").append(it).append('\n') }
+        }
+        diag.visibility = View.VISIBLE
     }
 
     private fun exitFullscreen() {
@@ -81,6 +148,13 @@ class WebActivity : Activity() {
     }
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (event.keyCode == KeyEvent.KEYCODE_MENU) {
+            if (event.action == KeyEvent.ACTION_UP) {
+                notePageText()
+                showDiagnostics(diag.visibility != View.VISIBLE)
+            }
+            return true
+        }
         if (event.keyCode != KeyEvent.KEYCODE_BACK) return super.dispatchKeyEvent(event)
         if (event.action == KeyEvent.ACTION_UP) {
             when {
