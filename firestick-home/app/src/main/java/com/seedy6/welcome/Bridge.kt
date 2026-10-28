@@ -107,6 +107,12 @@ class Bridge(private val activity: MainActivity) {
         }
     }
 
+    /** Open a website full-screen in the TV browser, where the remote can move between links. */
+    @JavascriptInterface
+    fun openWeb(url: String) {
+        activity.runOnUiThread { activity.startActivity(WebActivity.intent(activity, url)) }
+    }
+
     @JavascriptInterface
     fun openSettings() {
         activity.runOnUiThread {

@@ -50,6 +50,7 @@ window.HOME_CONFIG = {
   // Web apps (for example from the Mac mini) opened full-screen on the TV; Back returns home.
   // A tile only appears once its url is set.
   webApps: [
+    { label: "Tekken", subtitle: "Watch · Lab · Scrolls", url: "https://tekken.islampoems.com", style: "tekken" },
     { label: "Munajat", subtitle: "Duas", url: "https://munajatlog.vercel.app" }
   ],
 

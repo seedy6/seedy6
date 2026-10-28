@@ -224,6 +224,11 @@ body.intro-on #home { opacity: 0; transform: translateY(18px); }
 .tile.web .w-name { display: block; font-family: var(--display); font-size: 40px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text); }
 .tile.web .w-sub { display: block; margin-top: 6px; font-size: 24px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent-2); }
 .tile.web .label { display: none; }
+/* Tekken: Feng Wei's red ink behind the title. */
+.tile.web.tekken { background: linear-gradient(90deg, rgba(5, 2, 2, 0.85) 30%, rgba(5, 2, 2, 0.2)), url(art/fengwei-bg.webp) 70% 40% / 160% auto no-repeat; }
+.tile.web.tekken::before { background: linear-gradient(180deg, #e0302a, #f2b84b); }
+.tile.web.tekken .w-name { font-family: "Bebas Neue", var(--display); font-size: 58px; letter-spacing: 0.14em; }
+.tile.web.tekken .w-sub { font-size: 20px; letter-spacing: 0.16em; color: #ffb59c; }
 /* Photo tile: a round portrait in a glowing gold-to-cyan ring. */
 .tile.photo { background: radial-gradient(circle at 50% 50%, rgba(242, 184, 75, 0.18), transparent 70%), #07090d; border: 1px solid var(--line); }
 .tile.photo .ph-ring { position: absolute; left: 50%; top: 50%; width: 138px; height: 138px; margin: -69px 0 0 -69px; border-radius: 50%; padding: 4px;

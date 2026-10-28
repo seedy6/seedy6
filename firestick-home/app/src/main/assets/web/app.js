@@ -482,12 +482,13 @@
   }
   function webTile(app) {
     const b = document.createElement("button");
-    b.className = "tile web focusable";
+    b.className = "tile web focusable" + (app.style ? " " + app.style : "");
     b.innerHTML = `<span class="w-name">${esc(app.label)}</span><span class="w-sub">${esc(app.subtitle || "")}</span>` +
       `<span class="label">${esc(app.label)}</span>`;
     b.onclick = () => {
       Sfx.select();
-      if (onDevice) openWebApp(app);
+      if (onDevice && typeof native.openWeb === "function") native.openWeb(app.url); // TV browser
+      else if (onDevice) openWebApp(app); // older app versions: open in a frame
       else toast(`On the TV this opens ${app.label} full-screen`);
     };
     return b;

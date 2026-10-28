@@ -48,6 +48,12 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".WebActivity"
+            android:configChanges="keyboard|keyboardHidden|navigation|orientation|screenLayout|screenSize|uiMode"
+            android:exported="false"
+            android:screenOrientation="landscape" />
+
         <provider
             android:name=".UpdateFileProvider"
             android:authorities="com.seedy6.welcome.updates"
