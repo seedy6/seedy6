@@ -53,7 +53,8 @@ class WebActivity : Activity() {
             settings.javaScriptCanOpenWindowsAutomatically = true // pop-ups (Twitch) open in this view
             settings.textZoom = 100
             // Without "; wv" sites (Twitch) treat it as the full Chrome it is, not a limited in-app view.
-            settings.userAgentString = settings.userAgentString.replace("; wv)", ")")
+            // WelcomeHomeTV turns on TV mode in Tekken Lab.
+            settings.userAgentString = settings.userAgentString.replace("; wv)", ")") + " WelcomeHomeTV"
             isFocusable = true
             isFocusableInTouchMode = true
             webViewClient = object : WebViewClient() {
@@ -141,7 +142,7 @@ class WebActivity : Activity() {
                 fetch(u,{cache:'no-store'}).then(function(r){return r.text().then(function(b){p[k]=r.status+' '+b.length+'B '+(Date.now()-t0)+'ms';});},function(e){p[k]='failed '+e.message;});
               });}
             var loaded=performance.getEntriesByType('resource').map(function(e){return e.name.split('?')[0].split('/').pop()+' '+Math.round(e.duration);}).join(', ');
-            return text+'\nState: '+document.readyState+' · Fetch test: '+Object.keys(p).map(function(k){return k+' '+p[k];}).join(', ')+
+            return text+'\nScreen: '+innerWidth+'x'+innerHeight+' @'+devicePixelRatio+'x · State: '+document.readyState+' · Fetch test: '+Object.keys(p).map(function(k){return k+' '+p[k];}).join(', ')+
               '\nLoaded: '+(loaded||'nothing').slice(0,420);
         })()"""
         web.evaluateJavascript(js) { result ->
