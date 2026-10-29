@@ -80,6 +80,7 @@ class MainActivity : Activity() {
     }
 
     // Stop animations and timers while another app is on screen; the Fire Stick has little CPU to spare.
+    // pauseTimers() is for all WebViews in the app: WebActivity resumes them when it opens over this one.
     override fun onPause() {
         web.onPause()
         web.pauseTimers()

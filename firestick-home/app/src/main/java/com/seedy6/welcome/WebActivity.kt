@@ -12,6 +12,7 @@ import android.view.KeyEvent
 import android.view.View
 import android.view.ViewGroup
 import android.webkit.ConsoleMessage
+import android.webkit.CookieManager
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
@@ -39,6 +40,7 @@ class WebActivity : Activity() {
     private var pageNote = ""
 
     @SuppressLint("SetJavaScriptEnabled")
+    @Suppress("DEPRECATION") // databaseEnabled
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         root = FrameLayout(this).apply { setBackgroundColor(Color.BLACK) }
@@ -46,8 +48,12 @@ class WebActivity : Activity() {
             setBackgroundColor(Color.BLACK)
             settings.javaScriptEnabled = true
             settings.domStorageEnabled = true
+            settings.databaseEnabled = true
             settings.mediaPlaybackRequiresUserGesture = false
+            settings.javaScriptCanOpenWindowsAutomatically = true // pop-ups (Twitch) open in this view
             settings.textZoom = 100
+            // Without "; wv" sites (Twitch) treat it as the full Chrome it is, not a limited in-app view.
+            settings.userAgentString = settings.userAgentString.replace("; wv)", ")")
             isFocusable = true
             isFocusableInTouchMode = true
             webViewClient = object : WebViewClient() {
@@ -93,6 +99,8 @@ class WebActivity : Activity() {
                 override fun onHideCustomView() = exitFullscreen()
             }
         }
+        CookieManager.getInstance().setAcceptCookie(true)
+        CookieManager.getInstance().setAcceptThirdPartyCookies(web, true) // Twitch embeds
         root.addView(web, FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
         diag = TextView(this).apply {
             setBackgroundColor(Color.argb(225, 10, 6, 6))
@@ -184,13 +192,17 @@ class WebActivity : Activity() {
         return true
     }
 
+    // pauseTimers() and resumeTimers() act on every WebView in the app. The home screen pauses them when this
+    // browser opens over it, so resume them here, or module scripts, fetches and timers stop (blank Lab and Scrolls).
     override fun onResume() {
         super.onResume()
         web.onResume()
+        web.resumeTimers()
     }
 
     override fun onPause() {
         web.onPause()
+        web.pauseTimers()
         super.onPause()
     }
 
