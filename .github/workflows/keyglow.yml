@@ -1,0 +1,63 @@
+name: Keyglow piano app APK
+
+on:
+  push:
+    paths:
+      - "keyglow/**"
+      - ".github/workflows/keyglow.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write # to publish the APK on the keyglow-latest release
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: keyglow
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      # The detector, song parser and course are plain JavaScript with tests that run in Node.
+      - name: Test the web app's logic
+        run: node --test tests/*.test.mjs
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Build APK
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+          cp app/build/outputs/apk/debug/app-debug.apk keyglow.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: keyglow-apk
+          path: keyglow/keyglow.apk
+
+      # A fixed link to open on the tablet:
+      # https://github.com/seedy6/seedy6/releases/download/keyglow-latest/keyglow.apk
+      - name: Publish to the keyglow-latest release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: keyglow-latest
+          name: Keyglow piano app (latest build)
+          target_commitish: ${{ github.sha }}
+          prerelease: true
+          make_latest: false
+          body: |
+            Latest build of Keyglow from `${{ github.ref_name }}` (${{ github.sha }}).
+            On the Android tablet, open this link in the browser and install the APK:
+            https://github.com/seedy6/seedy6/releases/download/keyglow-latest/keyglow.apk
+          files: |
+            keyglow/keyglow.apk
