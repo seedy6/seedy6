@@ -1,7 +1,7 @@
 // Start-up and the screen switcher.
 
 import { html, render } from './vendor/preact-htm.js';
-import { useApp, nav, applySettings, getState, setProfile } from './app.js';
+import { useApp, nav, applySettings, getState, setProfile, ensureListening, stopListening } from './app.js';
 import { initMidi, initComputerKeyboard, onMidiDevices, emit } from './input.js';
 import { resumeAudio, loadPiano, allNotesOff } from './audio/engine.js';
 import { ToastHost, toast } from './ui/components.js';
@@ -49,8 +49,10 @@ function boot() {
     if (list.length > lastCount) toast(`🎹 ${list[list.length - 1]} connected`);
     lastCount = list.length;
   });
-  window.__kgPause = () => { allNotesOff(); window.dispatchEvent(new Event('kg-pause')); };
-  window.__kgResume = () => { resumeAudio(); };
+  // In the background, let go of the microphone; pick it up again on return if this screen listens.
+  const LISTENING = new Set(['player', 'lesson', 'freeplay', 'quiz', 'calibrate']);
+  window.__kgPause = () => { allNotesOff(); window.dispatchEvent(new Event('kg-pause')); stopListening(); };
+  window.__kgResume = () => { resumeAudio(); if (LISTENING.has(nav.current?.screen)) ensureListening(); };
   window.__kgSharedFile = (f) => { nav.go('import', { shared: f }); };
   window.__kgTest = { emit, nav }; // used by the automated browser tests
 }
