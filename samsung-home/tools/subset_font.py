@@ -5,8 +5,8 @@ from fontTools import subset
 here = os.path.dirname(os.path.abspath(__file__))
 src = sys.argv[1]
 s = "".join(open(os.path.join(here, "..", "app", f), encoding="utf-8").read() for f in ("data.js", "main.js", "index.html"))
-s += "".join(chr(0x0660 + i) for i in range(10)) + "\u066a\u00b0/"  # Arabic-Indic digits, percent, degree
-text = "".join(sorted(set(c for c in s if "؀" <= c <= "ۿ"))) + ".,:()!؟،؛ 0123456789"
+s += "".join(chr(0x0660 + i) for i in range(10))  # Arabic-Indic digits
+text = "".join(sorted(set(c for c in s if "\u0600" <= c <= "\u06ff"))) + ".,:()!/ 0123456789%\u00b0\u00ab\u00bb\u00b7"
 opts = subset.Options(); opts.layout_features = ["*"]; opts.name_IDs = ["*"]; opts.notdef_outline = True
 font = subset.load_font(src, opts); sub = subset.Subsetter(opts); sub.populate(text=text); sub.subset(font)
 out = os.path.join(here, "..", "app", "fonts", "amiri-subset.ttf")

@@ -207,6 +207,19 @@ h1 .name.out { opacity: 0; }
   border-top: 13px solid transparent; border-bottom: 13px solid transparent; border-left: 22px solid #fff; }
 .label { position: absolute; left: 0; right: 0; bottom: 16px; text-align: center; font-size: 28px; letter-spacing: 2px; }
 
+#apps .tile { float: left; margin-right: 28px; }
+.tv-mark { position: absolute; left: 50%; top: 18px; width: 80px; height: 80px; margin-left: -40px; }
+.tv-mark img { display: block; width: 80px; height: 80px; }
+
+/* ---------- watching the iStar box: the page hides, the video plane shows ---------- */
+html.tvmode, html.tvmode body { background: transparent; }
+body.tvmode #stage { display: none; }
+#tvhint { position: absolute; left: 50%; top: 60px; width: 600px; margin-left: -300px; padding: 14px 0; text-align: center;
+  font-family: "AmiriSub", serif; font-size: 40px; color: #fff; background: rgba(10,6,28,0.75); border-radius: 18px;
+  opacity: 0; display: none; -webkit-transition: opacity 0.6s; transition: opacity 0.6s; }
+body.tvmode #tvhint { display: block; }
+#tvhint.show { opacity: 1; }
+
 /* ---------- prayer times ---------- */
 #prayers { position: absolute; right: 150px; top: 890px; height: 110px; }
 #prayers .p { float: left; width: 230px; margin-left: 14px; padding: 12px 0 14px; text-align: center; border-radius: 18px;

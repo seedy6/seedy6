@@ -318,7 +318,7 @@
     var rain = day.precipitation_probability_max ? day.precipitation_probability_max[0] : null;
     setText($("whl"), "العظمى " + deg(day.temperature_2m_max[0]) + "  \u00b7  الصغرى " + deg(day.temperature_2m_min[0]));
     setText($("wmore"), (cur.wind_speed_10m !== undefined ? "الرياح " + arabicDigits(Math.round(cur.wind_speed_10m)) + " ميل/س" : "") +
-      (rain !== null && rain !== undefined ? "  \u00b7  المطر " + arabicDigits(rain) + "\u066a" : ""));
+      (rain !== null && rain !== undefined ? "  \u00b7  المطر " + arabicDigits(rain) + "%" : ""));
     var days = $("wdays");
     days.innerHTML = "";
     for (var i = 1; i < day.time.length && i <= 3; i++) {
@@ -328,7 +328,7 @@
       card.appendChild(picture(dc[1], false, true));
       card.appendChild(el("div", "wdt", deg(day.temperature_2m_max[i]) + " / " + deg(day.temperature_2m_min[i])));
       var pr = day.precipitation_probability_max ? day.precipitation_probability_max[i] : null;
-      card.appendChild(el("div", "wdr", pr ? "المطر " + arabicDigits(pr) + "\u066a" : dc[0]));
+      card.appendChild(el("div", "wdr", pr ? "المطر " + arabicDigits(pr) + "%" : dc[0]));
       days.appendChild(card);
     }
     $("weather").className = "shown";
@@ -414,14 +414,64 @@
     })();
   }
 
-  // ---------- remote ----------
-  var KEY_ENTER = 13, KEY_RETURN = 10009, KEY_LEFT = 37, KEY_RIGHT = 39, KEY_UP = 38;
+  // ---------- iStar box on HDMI 2, shown inside Salam ----------
+  // The 2015 TV refuses network remote keys (ms.remote.control), but the TV Window API
+  // can show an input. The video plane is behind the page, so the page hides itself.
+  // Its rectangle is in the TV's 1280x720 window coordinates (1920x1080 is refused).
+  var ISTAR = { type: "HDMI", number: 2 };
+  var tvMode = false, hintTimer = null;
+  function showInput(src) {
+    window.tizen.tvwindow.setSource(src, function () {
+      window.tizen.tvwindow.show(function () {
+        tvMode = true;
+        document.documentElement.className = document.body.className = "tvmode";
+        var h = $("tvhint"); h.className = "show";
+        clearTimeout(hintTimer);
+        hintTimer = setTimeout(function () { h.className = ""; }, 4000);
+      }, function (e) { toast("iStar did not open (" + e.name + ")"); }, ["0px", "0px", "1280px", "720px"], "MAIN");
+    }, function (e) { toast("iStar did not open (" + e.name + ")"); }, "MAIN");
+  }
+  function openIStar() {
+    if (!onTV || !window.tizen.tvwindow) { toast("Preview: the iStar box opens on the TV"); return; }
+    try {
+      // Use the TV's own source object for HDMI 2 if it lists one.
+      window.tizen.systeminfo.getPropertyValue("VIDEOSOURCE", function (v) {
+        var all = (v.connected || []).concat(v.disconnected || []), src = ISTAR;
+        for (var i = 0; i < all.length; i++) if (all[i].type === ISTAR.type && all[i].number === ISTAR.number) src = all[i];
+        showInput(src);
+      }, function () { showInput(ISTAR); });
+    } catch (e) { toast("iStar did not open (" + e.message + ")"); }
+  }
+  function closeIStar() {
+    tvMode = false;
+    document.documentElement.className = document.body.className = "";
+    $("tvhint").className = "";
+    try { window.tizen.tvwindow.hide(function () {}, function () {}, "MAIN"); } catch (e) {}
+  }
+
+  // ---------- tiles and remote ----------
+  var TILES = [["yt", launchYouTube], ["istar", openIStar]], focus = 0;
+  function setFocus(i) {
+    focus = (i + TILES.length) % TILES.length;
+    for (var j = 0; j < TILES.length; j++) $(TILES[j][0]).className = "tile" + (j === focus ? " focus" : "");
+  }
+  var KEY_ENTER = 13, KEY_RETURN = 10009, KEY_EXIT = 10182, KEY_LEFT = 37, KEY_RIGHT = 39, KEY_UP = 38, KEY_DOWN = 40;
   document.addEventListener("keydown", function (e) {
     var k = e.keyCode;
-    if (k === KEY_ENTER) { e.preventDefault(); launchYouTube(); }
-    else if (k === KEY_RIGHT) { e.preventDefault(); nextSaying(); }   // a new saying now
+    if (tvMode) {                                   // watching the iStar box
+      if (k === KEY_RETURN || k === KEY_EXIT) { e.preventDefault(); closeIStar(); }
+      return;
+    }
+    if (k === KEY_ENTER) { e.preventDefault(); TILES[focus][1](); }
+    else if (k === KEY_RIGHT) { e.preventDefault(); setFocus(focus + 1); }
+    else if (k === KEY_LEFT) { e.preventDefault(); setFocus(focus - 1); }
+    else if (k === KEY_DOWN) { e.preventDefault(); nextSaying(); }   // a new saying now
     else if (k === KEY_UP) { e.preventDefault(); report(); }          // show the TV report
-    else if (k === KEY_RETURN || k === KEY_LEFT) { e.preventDefault(); } // this is home: Back stays here
+    else if (k === KEY_RETURN) { e.preventDefault(); }                // this is home: Back stays here
   });
-  $("yt").addEventListener("click", launchYouTube);
+  for (var t = 0; t < TILES.length; t++) {
+    (function (i) { $(TILES[i][0]).addEventListener("click", function () { setFocus(i); TILES[i][1](); }); })(t);
+  }
+  setFocus(0);
 })();
+

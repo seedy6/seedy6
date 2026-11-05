@@ -9,7 +9,8 @@ It shows:
 - The weather for Bolton in Arabic: now (with a moving picture), feels-like,
   high and low, wind and chance of rain, and cards for the next three days.
 - A saying or hadith each minute, in Arabic and English.
-- Bolton prayer times and a YouTube tile.
+- Bolton prayer times, a YouTube tile, and an iStar tile that shows the iStar
+  box on HDMI 2 inside the app (press Back to return).
 - A sky that follows the sun, with sparkles and shooting stars at night.
 
 The weather comes from Open-Meteo over plain HTTP: its HTTPS certificate chains
@@ -28,8 +29,9 @@ to ISRG Root X2, which this TV does not trust. All other data is on the TV.
 
 ## Remote
 
-- OK: open YouTube.
-- Right: show the next saying now.
+- Left and Right: move between the YouTube and iStar tiles.
+- OK: open the selected tile.
+- Down: show the next saying now.
 - Up: show a report (screen size, engine, weather status).
 - Back and Left: do nothing (this is the home screen).
 
@@ -57,6 +59,9 @@ to ISRG Root X2, which this TV does not trust. All other data is on the TV.
   resize the page from that value, or the page shrinks into a corner.
 - The TV plays only opacity and transform animations. Effects that repaint
   (for example a background-clip text shimmer) do not show.
+- The 2015 TV refuses network remote keys (`ms.remote.control`), so the iStar
+  tile uses the TV Window API (`tizen.tvwindow`, privilege `tv.window`). Its
+  rectangle is in 1280x720 window coordinates; 1920x1080 is refused.
 - `tizen run` fails on Tizen 2.3, so `deploy.sh` starts the app with
   `sdb shell 0 was_execute`.
 - Prayer times are calculated with the Jafari method (Fajr 16°, Maghrib 4°).
