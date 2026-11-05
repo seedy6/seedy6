@@ -8,10 +8,7 @@
 html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #0b0820; }
 body { font-family: "Rajdhani", "SamsungOne", "Helvetica Neue", Arial, sans-serif; font-weight: 600; color: #fbeee4; }
 
-#stage {
-  position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; overflow: hidden;
-  -webkit-transform-origin: 0 0; transform-origin: 0 0;
-}
+#stage { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; overflow: hidden; }
 
 /* ---------- sky: one palette for each part of the day ---------- */
 #sky { position: absolute; left: 0; top: 0; width: 100%; height: 100%;
@@ -113,28 +110,23 @@ body { font-family: "Rajdhani", "SamsungOne", "Helvetica Neue", Arial, sans-seri
 .dusk  .h1 { fill: #6b2e5c; } .dusk  .h2 { fill: #4a2049; } .dusk  .h3 { fill: #2c1430; }
 
 /* ---------- fades (text moves every few minutes) ---------- */
-.fade { opacity: 1; -webkit-transform: translate(0, 0); transform: translate(0, 0);
-  -webkit-transition: opacity 1.4s ease-in-out, -webkit-transform 1.4s ease-out; transition: opacity 1.4s ease-in-out, transform 1.4s ease-out; }
-.fade.out { opacity: 0; -webkit-transform: translate(0, 16px); transform: translate(0, 16px); }
+.fade { opacity: 1; -webkit-transition: opacity 1.4s ease-in-out; transition: opacity 1.4s ease-in-out; }
+.fade.out { opacity: 0; }
 
 /* ---------- greeting ---------- */
 #hello { position: absolute; left: 150px; top: 90px; width: 1320px; }
-h1 { margin: 4px 0 0 -5px; font-size: 150px; line-height: 1; font-weight: 700; letter-spacing: 2px;
+h1 { margin: 0; font-family: "AmiriSub", serif; font-size: 150px; line-height: 1.25; font-weight: 400; text-align: left;
   color: #fff6ef; text-shadow: 0 6px 40px rgba(20,8,40,0.45); }
-h1 span { color: #ffc9a8; text-shadow: none;
-  background-image: -webkit-linear-gradient(left, #ffc9a8 0%, #ffc9a8 40%, #fff4ea 46%, #ffffff 50%, #fff4ea 54%, #ffc9a8 60%, #ffc9a8 100%);
-  background-image: linear-gradient(to right, #ffc9a8 0%, #ffc9a8 40%, #fff4ea 46%, #ffffff 50%, #fff4ea 54%, #ffc9a8 60%, #ffc9a8 100%);
-  background-size: 260% 100%; background-position: 100% 0;
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  -webkit-animation: shimmer 9s ease-in-out infinite; animation: shimmer 9s ease-in-out infinite; }
-@-webkit-keyframes shimmer { 0% { background-position: 100% 0; } 30% { background-position: 0% 0; } 100% { background-position: 0% 0; } }
-@keyframes shimmer { 0% { background-position: 100% 0; } 30% { background-position: 0% 0; } 100% { background-position: 0% 0; } }
-.rule { width: 200px; height: 3px; margin: 26px 0 22px;
+/* The 2015 TV plays only opacity and transform animations, so the name glows with a
+   white copy on top that fades in and out. */
+h1 .name { color: #ffc9a8; opacity: 1; -webkit-transition: opacity 1.8s ease-in-out; transition: opacity 1.8s ease-in-out; }
+h1 .name.out { opacity: 0; }
+.rule { width: 200px; height: 3px; margin: 8px 0 22px; -webkit-transform-origin: 0 50%; transform-origin: 0 50%;
   background: -webkit-linear-gradient(left, #ffc9a8, rgba(255,201,168,0));
   background: linear-gradient(to right, #ffc9a8, rgba(255,201,168,0));
   -webkit-animation: rule 9s ease-in-out infinite; animation: rule 9s ease-in-out infinite; }
-@-webkit-keyframes rule { 0%, 100% { width: 200px; opacity: 0.8; } 50% { width: 320px; opacity: 1; } }
-@keyframes rule { 0%, 100% { width: 200px; opacity: 0.8; } 50% { width: 320px; opacity: 1; } }
+@-webkit-keyframes rule { 0%, 100% { -webkit-transform: scale(1, 1); opacity: 0.8; } 50% { -webkit-transform: scale(1.6, 1); opacity: 1; } }
+@keyframes rule { 0%, 100% { transform: scale(1, 1); opacity: 0.8; } 50% { transform: scale(1.6, 1); opacity: 1; } }
 #when { font-size: 42px; color: #f3e1f0; letter-spacing: 2px; }
 #time { font-weight: 700; color: #fff6ef; }
 .dot { -webkit-animation: pulse 2.4s ease-in-out infinite; animation: pulse 2.4s ease-in-out infinite;
@@ -142,10 +134,46 @@ h1 span { color: #ffc9a8; text-shadow: none;
 @-webkit-keyframes pulse { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
 @keyframes pulse { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
 .dot { display: inline-block; width: 8px; height: 8px; margin: 0 20px 9px; border-radius: 50%; background: #ffc9a8; vertical-align: middle; }
-#hijri { margin-top: 8px; font-size: 34px; color: #e6d3ee; letter-spacing: 2px; }
-#event { margin-top: 6px; font-size: 30px; letter-spacing: 1px; color: #ffd9a0; }
+#hijri { font-family: "AmiriSub", serif; font-size: 40px; letter-spacing: 0; color: #f3e1f0; }
+#event { max-width: 1030px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 12px; font-size: 30px; letter-spacing: 1px; color: #ffd9a0; }
 #event.mourning { color: #c9b8f0; }
 #event b { font-weight: 700; letter-spacing: 3px; text-transform: uppercase; font-size: 22px; margin-right: 14px; opacity: 0.85; }
+
+/* ---------- weather (top right) ---------- */
+#weather { position: absolute; right: 150px; top: 96px; width: 470px; text-align: right; opacity: 0;
+  -webkit-transition: opacity 1.5s; transition: opacity 1.5s; }
+#weather.shown { opacity: 1; }
+#wnow { height: 104px; }
+#wnow .wt { display: inline-block; vertical-align: middle; font-size: 100px; line-height: 104px; font-weight: 700; color: #fff6ef; }
+#wdesc { font-size: 32px; color: #f3e1f0; letter-spacing: 1px; }
+#whl { margin-top: 2px; font-size: 26px; color: #e6d3ee; opacity: 0.85; letter-spacing: 1px; white-space: pre; }
+#wdays { margin-top: 18px; }
+.wd { font-size: 25px; line-height: 38px; color: #f0dff0; white-space: nowrap; }
+.wdn { display: inline-block; width: 120px; text-align: left; color: #ffc9a8; letter-spacing: 1px; }
+.wdc { display: inline-block; width: 190px; text-align: left; opacity: 0.9; }
+.wdt { display: inline-block; width: 130px; text-align: right; font-weight: 700; }
+/* icons, drawn with CSS */
+.wi { position: relative; display: inline-block; vertical-align: middle; width: 96px; height: 80px; margin-right: 18px; }
+.wi i { position: absolute; display: block; }
+.wi.sun i:nth-child(1) { left: 22px; top: 14px; width: 52px; height: 52px; border-radius: 50%; background: #ffd27a;
+  -webkit-box-shadow: 0 0 30px rgba(255,200,110,0.8); box-shadow: 0 0 30px rgba(255,200,110,0.8); }
+.wi.moon i:nth-child(1) { left: 26px; top: 14px; width: 50px; height: 50px; border-radius: 50%;
+  -webkit-box-shadow: inset -14px -6px 0 0 #f6e7c9, 0 0 26px rgba(246,231,201,0.25); box-shadow: inset -14px -6px 0 0 #f6e7c9, 0 0 26px rgba(246,231,201,0.25); }
+.wi.part i:nth-child(1) { left: 40px; top: 4px; width: 42px; height: 42px; border-radius: 50%; background: #ffd27a;
+  -webkit-box-shadow: 0 0 24px rgba(255,200,110,0.7); box-shadow: 0 0 24px rgba(255,200,110,0.7); }
+.wi.part i:nth-child(2), .wi.cloud i:nth-child(1), .wi.rain i:nth-child(1), .wi.snow i:nth-child(1), .wi.storm i:nth-child(1) {
+  left: 8px; top: 26px; width: 78px; height: 30px; border-radius: 15px; background: #e9e2f2; }
+.wi.part i:nth-child(3), .wi.cloud i:nth-child(2), .wi.rain i:nth-child(2), .wi.snow i:nth-child(2), .wi.storm i:nth-child(2) {
+  left: 26px; top: 10px; width: 38px; height: 38px; border-radius: 50%; background: #e9e2f2; }
+.wi.rain i:nth-child(3), .wi.storm i:nth-child(3) { left: 24px; top: 62px; width: 44px; height: 14px;
+  background: -webkit-repeating-linear-gradient(left, #8fc4ff 0px, #8fc4ff 4px, rgba(0,0,0,0) 4px, rgba(0,0,0,0) 14px);
+  background: repeating-linear-gradient(to right, #8fc4ff 0px, #8fc4ff 4px, rgba(0,0,0,0) 4px, rgba(0,0,0,0) 14px); }
+.wi.storm i:nth-child(3) { background: #ffd27a; width: 8px; left: 42px; height: 18px; }
+.wi.snow i:nth-child(3) { left: 24px; top: 64px; width: 44px; height: 8px;
+  background: -webkit-repeating-linear-gradient(left, #ffffff 0px, #ffffff 6px, rgba(0,0,0,0) 6px, rgba(0,0,0,0) 14px);
+  background: repeating-linear-gradient(to right, #ffffff 0px, #ffffff 6px, rgba(0,0,0,0) 6px, rgba(0,0,0,0) 14px); }
+.wi.fog i { left: 10px; width: 76px; height: 6px; border-radius: 3px; background: #d9d2e6; }
+.wi.fog i:nth-child(1) { top: 24px; } .wi.fog i:nth-child(2) { top: 40px; left: 20px; } .wi.fog i:nth-child(3) { top: 56px; }
 
 /* ---------- saying ---------- */
 #saying { position: absolute; left: 200px; width: 1520px; top: 590px; text-align: center; }
@@ -181,7 +209,7 @@ h1 span { color: #ffc9a8; text-shadow: none;
 #prayers .p.next .pl, #prayers .p.next .pt { color: #ffd9c2; opacity: 1; }
 
 /* ---------- toast (shows launch errors on the TV) ---------- */
-#toast { position: absolute; right: 120px; top: 60px; max-width: 900px; padding: 18px 28px; border-radius: 14px;
+#toast { position: absolute; right: 120px; top: 60px; max-width: 1100px; padding: 18px 28px; border-radius: 14px;
   font-size: 28px; background: rgba(10,6,28,0.8); color: #fff; opacity: 0;
   -webkit-transition: opacity 0.4s; transition: opacity 0.4s; }
 #toast.show { opacity: 1; }

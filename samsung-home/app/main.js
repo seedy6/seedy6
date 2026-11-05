@@ -4,12 +4,13 @@
 (function () {
   "use strict";
 
-  var NAME = "Abu Saeed";
+  var NAMES = ["أبو سعيد", "أم سعيد"];   // Abu Saeed and Um Saeed: the greeting changes between these
+  var NAME_SECONDS = 15;                 // a slow fade to the other name
   var LAT = 53.58, LON = -2.43;          // Bolton
   var HIJRI_ADJUST = 0;                  // days; set to -1 or 1 if Najaf's moon sighting differs
   var SAYING_SECONDS = 60;               // a new saying each minute
   var MOVE_MINUTES = 4;                  // the greeting moves to a new place every few minutes
-  var SLOTS = [[150, 90], [430, 110], [290, 70], [520, 85]];
+  var SLOTS = [[150, 90], [230, 120], [180, 70], [260, 100]];  // left of the weather
 
   // YouTube on this TV. The Tizen app IDs are tried in order; the last resort is the
   // TV's own REST API, which knows YouTube as 111299001912 (read from :8001/api/v2).
@@ -19,6 +20,11 @@
   var DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
   var MONTHS = ["January", "February", "March", "April", "May", "June", "July",
                 "August", "September", "October", "November", "December"];
+  var HIJRI_MONTHS_AR = ["محرم", "صفر", "ربيع الأول", "ربيع الثاني", "جمادى الأولى", "جمادى الثانية",
+                         "رجب", "شعبان", "رمضان", "شوال", "ذو القعدة", "ذو الحجة"];
+  function arabicDigits(n) {
+    return String(n).replace(/[0-9]/g, function (c) { return String.fromCharCode(0x0660 + (+c)); });
+  }
   var HIJRI_MONTHS = ["Muharram", "Safar", "Rabi al-Awwal", "Rabi al-Thani", "Jumada al-Awwal", "Jumada al-Thani",
                       "Rajab", "Sha'ban", "Ramadan", "Shawwal", "Dhu al-Qa'dah", "Dhu al-Hijjah"];
 
@@ -35,14 +41,48 @@
   function setText(el, s) { el.innerHTML = ""; el.appendChild(document.createTextNode(s)); }
 
   // ---------- fit the 1920x1080 stage to the screen ----------
+  // No CSS transform on the stage: on the 2015 engine, animated layers inside a
+  // transformed parent draw in the wrong place or not at all. Use zoom, and only
+  // when the screen is not 1920 wide already.
+  // On the TV, never resize: the viewport meta tag already gives a 1920x1080 page, and
+  // at start-up the TV briefly reports a 1280-wide window, which made the page shrink
+  // into the top-left corner. Only the browser preview needs this.
+  var fitScale = 1;
   function fit() {
-    var s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
-    var t = "scale(" + s + ")";
-    stage.style.webkitTransform = t;
-    stage.style.transform = t;
+    if (onTV) return;
+    var w = window.innerWidth || document.documentElement.clientWidth;
+    var h = window.innerHeight || document.documentElement.clientHeight;
+    if (!w || !h) return;
+    fitScale = Math.min(w / 1920, h / 1080);
+    document.body.style.zoom = Math.abs(fitScale - 1) < 0.02 ? "" : String(fitScale);
   }
   window.addEventListener("resize", fit);
   fit();
+
+  // ---------- on-screen report (the TV has no debugger): press Up to show it ----------
+  function report() {
+    var t = $("toast"), span = document.querySelector ? document.querySelector("h1 span") : null;
+    var cs = span && window.getComputedStyle ? window.getComputedStyle(span) : {};
+    var sp = document.createElement("div").style;
+    var lines = [
+      "window " + window.innerWidth + "x" + window.innerHeight +
+        "  doc " + document.documentElement.clientWidth + "x" + document.documentElement.clientHeight,
+      "screen " + screen.width + "x" + screen.height + "  dpr " + (window.devicePixelRatio || "?") +
+        "  zoom " + fitScale.toFixed(3),
+      "anim " + ("webkitAnimationName" in sp ? "webkit " : "") + ("animationName" in sp ? "std" : "") +
+        "  clip " + (cs.webkitBackgroundClip || "?") + "  fill " + (cs.webkitTextFillColor || "?"),
+      "weather " + weatherStatus,
+      String(navigator.userAgent).slice(0, 90)
+    ];
+    t.innerHTML = "";
+    for (var i = 0; i < lines.length; i++) {
+      var d = document.createElement("div"); d.appendChild(document.createTextNode(lines[i])); t.appendChild(d);
+    }
+    t.className = "show";
+    clearTimeout(window.__reportTimer);
+    window.__reportTimer = setTimeout(function () { t.className = ""; }, 30000);
+  }
+  window.report = report;
 
   // ---------- sun: sunrise, sunset and prayer times (Jafari method) ----------
   var RAD = Math.PI / 180;
@@ -114,7 +154,7 @@
   function renderIslamic(d) {
     var h = hijriOf(d), el = $("event");
     if (!h) { setText($("hijri"), ""); setText(el, ""); return; }
-    setText($("hijri"), h.d + " " + HIJRI_MONTHS[h.m - 1] + " " + h.y + " AH");
+    setText($("hijri"), arabicDigits(h.d) + " " + HIJRI_MONTHS_AR[h.m - 1] + " " + arabicDigits(h.y) + " هـ");
     el.innerHTML = ""; el.className = "";
     for (var k = 0; k <= 45; k++) {
       var day = new Date(d.getFullYear(), d.getMonth(), d.getDate() + k, 12);
@@ -161,7 +201,6 @@
     renderPrayers(d);
   }
   window.helloTick = function () { lastDay = ""; tick(); };
-  $("hello").getElementsByTagName("span")[0].innerHTML = NAME;
   tick();
   setInterval(tick, 10000);
 
@@ -190,6 +229,97 @@
   showSaying();
   setInterval(nextSaying, SAYING_SECONDS * 1000);
   window.nextSaying = nextSaying;
+
+  // ---------- the name: Abu Saeed and Um Saeed take turns, with a slow fade ----------
+  var nameIndex = 0;
+  function nameCycle() {
+    var n = $("nm");
+    n.className = "name out";
+    setTimeout(function () {
+      nameIndex = (nameIndex + 1) % NAMES.length;
+      setText(n, NAMES[nameIndex]);
+      n.className = "name";
+    }, 1900);
+  }
+  setText($("nm"), NAMES[0]);
+  setInterval(nameCycle, NAME_SECONDS * 1000);
+
+  // ---------- weather (Open-Meteo, Bolton) ----------
+  // Plain HTTP first: the HTTPS certificate chains to ISRG Root X2, which a 2015 TV does
+  // not trust. The last forecast is kept, so a short outage shows the old one.
+  var WEATHER_QUERY = "/v1/forecast?latitude=" + LAT + "&longitude=" + LON +
+    "&current=temperature_2m,weather_code,is_day&daily=weather_code,temperature_2m_max,temperature_2m_min" +
+    "&timezone=Europe%2FLondon&forecast_days=4";
+  var WEATHER_URLS = ["http://api.open-meteo.com" + WEATHER_QUERY, "https://api.open-meteo.com" + WEATHER_QUERY];
+  var weatherStatus = "not loaded";
+  function wmo(code) {
+    // [text, icon]
+    if (code === 0) return ["Clear", "sun"];
+    if (code === 1) return ["Mostly clear", "sun"];
+    if (code === 2) return ["Partly cloudy", "part"];
+    if (code === 3) return ["Cloudy", "cloud"];
+    if (code === 45 || code === 48) return ["Fog", "fog"];
+    if (code >= 51 && code <= 57) return ["Drizzle", "rain"];
+    if (code === 61 || code === 80) return ["Light rain", "rain"];
+    if (code === 63 || code === 81) return ["Rain", "rain"];
+    if (code === 65 || code === 82) return ["Heavy rain", "rain"];
+    if (code === 66 || code === 67) return ["Freezing rain", "rain"];
+    if (code >= 71 && code <= 77) return ["Snow", "snow"];
+    if (code === 85 || code === 86) return ["Snow showers", "snow"];
+    if (code >= 95) return ["Thunderstorms", "storm"];
+    return ["", "cloud"];
+  }
+  function deg(t) { return Math.round(t) + "\u00b0"; }
+  function icon(kind, night) {
+    var d = document.createElement("div");
+    d.className = "wi " + (kind === "sun" && night ? "moon" : kind);
+    for (var i = 0; i < 3; i++) d.appendChild(document.createElement("i"));
+    return d;
+  }
+  function renderWeather(w) {
+    if (!w || !w.current || !w.daily) return;
+    var c = wmo(w.current.weather_code), night = w.current.is_day === 0;
+    var box = $("weather"), now_ = $("wnow");
+    now_.innerHTML = "";
+    now_.appendChild(icon(c[1], night));
+    var t = document.createElement("span"); t.className = "wt"; t.appendChild(document.createTextNode(deg(w.current.temperature_2m)));
+    now_.appendChild(t);
+    setText($("wdesc"), c[0]);
+    setText($("whl"), "High " + deg(w.daily.temperature_2m_max[0]) + "   Low " + deg(w.daily.temperature_2m_min[0]));
+    var days = $("wdays");
+    days.innerHTML = "";
+    for (var i = 1; i < w.daily.time.length && i <= 3; i++) {
+      var p = w.daily.time[i].split("-"), dd = new Date(+p[0], +p[1] - 1, +p[2]);
+      var row = document.createElement("div"); row.className = "wd";
+      var a = document.createElement("span"); a.className = "wdn"; a.appendChild(document.createTextNode(i === 1 ? "Tomorrow" : DAYS[dd.getDay()].slice(0, 3)));
+      var b = document.createElement("span"); b.className = "wdc"; b.appendChild(document.createTextNode(wmo(w.daily.weather_code[i])[0]));
+      var e = document.createElement("span"); e.className = "wdt";
+      e.appendChild(document.createTextNode(deg(w.daily.temperature_2m_max[i]) + " / " + deg(w.daily.temperature_2m_min[i])));
+      row.appendChild(a); row.appendChild(b); row.appendChild(e); days.appendChild(row);
+    }
+    box.className = "shown";
+  }
+  function loadWeather(k) {
+    k = k || 0;
+    if (k >= WEATHER_URLS.length) return;
+    var x = new XMLHttpRequest();
+    x.open("GET", WEATHER_URLS[k], true);
+    x.timeout = 15000;
+    x.onload = function () {
+      var w = null;
+      try { w = JSON.parse(x.responseText); } catch (e) {}
+      if (x.status === 200 && w && w.current) {
+        weatherStatus = "ok via " + WEATHER_URLS[k].split(":")[0] + " at " + pad(now().getHours()) + ":" + pad(now().getMinutes());
+        renderWeather(w);
+        try { localStorage.setItem("salam.weather", x.responseText); } catch (e2) {}
+      } else { weatherStatus = "HTTP " + x.status + " from " + WEATHER_URLS[k].split(":")[0]; loadWeather(k + 1); }
+    };
+    x.onerror = x.ontimeout = function () { weatherStatus = "failed: " + WEATHER_URLS[k].split(":")[0]; loadWeather(k + 1); };
+    x.send();
+  }
+  try { renderWeather(JSON.parse(localStorage.getItem("salam.weather"))); } catch (e) {}
+  loadWeather();
+  setInterval(loadWeather, 30 * 60000);
 
   // ---------- the greeting moves every few minutes (and saves the screen from burn-in) ----------
   var slot = 0;
@@ -251,11 +381,12 @@
   }
 
   // ---------- remote ----------
-  var KEY_ENTER = 13, KEY_RETURN = 10009, KEY_LEFT = 37, KEY_RIGHT = 39;
+  var KEY_ENTER = 13, KEY_RETURN = 10009, KEY_LEFT = 37, KEY_RIGHT = 39, KEY_UP = 38;
   document.addEventListener("keydown", function (e) {
     var k = e.keyCode;
     if (k === KEY_ENTER) { e.preventDefault(); launchYouTube(); }
     else if (k === KEY_RIGHT) { e.preventDefault(); nextSaying(); }   // a new saying now
+    else if (k === KEY_UP) { e.preventDefault(); report(); }          // show the TV report
     else if (k === KEY_RETURN || k === KEY_LEFT) { e.preventDefault(); } // this is home: Back stays here
   });
   $("yt").addEventListener("click", launchYouTube);
