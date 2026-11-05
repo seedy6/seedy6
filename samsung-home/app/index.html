@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1920, height=1080, user-scalable=no">
+<title>Salam</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="stage">
+  <div id="sky"></div>
+  <div class="glow g1"></div>
+  <div class="glow g2"></div>
+  <div class="glow g3"></div>
+  <canvas id="stars" width="1920" height="1080"></canvas>
+  <svg id="hills" width="1920" height="1080" viewBox="0 0 1920 1080" preserveAspectRatio="none">
+    <path class="h1" d="M0 820 C 260 760, 520 790, 760 830 S 1240 880, 1500 820 S 1820 760, 1920 790 L1920 1080 L0 1080 Z"/>
+    <path class="h2" d="M0 900 C 300 860, 600 880, 900 920 S 1400 970, 1700 920 S 1880 890, 1920 900 L1920 1080 L0 1080 Z"/>
+    <path class="h3" d="M0 980 C 400 950, 800 965, 1200 990 S 1700 1010, 1920 985 L1920 1080 L0 1080 Z"/>
+  </svg>
+
+  <div id="hello" class="fade">
+    <div id="part">Good evening</div>
+    <h1>Salam, <span>Abu Saeed</span></h1>
+    <div class="rule"></div>
+    <div id="when"><span id="time">--:--</span><span class="dot"></span><span id="date"></span></div>
+    <div id="hijri"></div>
+    <div id="event"></div>
+  </div>
+
+  <div id="saying" class="fade">
+    <div class="ar" dir="rtl" lang="ar"></div>
+    <div class="en"></div>
+    <div class="src"></div>
+  </div>
+
+  <div id="apps">
+    <div class="tile focus" id="yt">
+      <div class="yt-mark"><div class="play"></div></div>
+      <div class="label">YouTube</div>
+    </div>
+  </div>
+
+  <div id="prayers">
+    <div class="p" data-p="fajr"><div class="pl">Fajr</div><div class="pt">--:--</div></div>
+    <div class="p" data-p="sunrise"><div class="pl">Sunrise</div><div class="pt">--:--</div></div>
+    <div class="p" data-p="dhuhr"><div class="pl">Dhuhr &amp; Asr</div><div class="pt">--:--</div></div>
+    <div class="p" data-p="maghrib"><div class="pl">Maghrib &amp; Isha</div><div class="pt">--:--</div></div>
+  </div>
+
+  <div id="toast"></div>
+</div>
+<script>
+  // The TV has no debugger: show script errors on the screen.
+  window.onerror = function (msg, src, line) {
+    var t = document.getElementById("toast");
+    t.innerHTML = "Error: " + msg + " (" + String(src).split("/").pop() + ":" + line + ")";
+    t.className = "show";
+  };
+</script>
+<script src="data.js"></script>
+<script src="events.js"></script>
+<script src="main.js"></script>
+</body>
+</html>
