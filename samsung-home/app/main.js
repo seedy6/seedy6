@@ -248,56 +248,90 @@
   // Plain HTTP first: the HTTPS certificate chains to ISRG Root X2, which a 2015 TV does
   // not trust. The last forecast is kept, so a short outage shows the old one.
   var WEATHER_QUERY = "/v1/forecast?latitude=" + LAT + "&longitude=" + LON +
-    "&current=temperature_2m,weather_code,is_day&daily=weather_code,temperature_2m_max,temperature_2m_min" +
-    "&timezone=Europe%2FLondon&forecast_days=4";
+    "&current=temperature_2m,apparent_temperature,weather_code,is_day,wind_speed_10m" +
+    "&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max" +
+    "&wind_speed_unit=mph&timezone=Europe%2FLondon&forecast_days=4";
   var WEATHER_URLS = ["http://api.open-meteo.com" + WEATHER_QUERY, "https://api.open-meteo.com" + WEATHER_QUERY];
   var weatherStatus = "not loaded";
+  var DAYS_AR = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
   function wmo(code) {
-    // [text, icon]
-    if (code === 0) return ["Clear", "sun"];
-    if (code === 1) return ["Mostly clear", "sun"];
-    if (code === 2) return ["Partly cloudy", "part"];
-    if (code === 3) return ["Cloudy", "cloud"];
-    if (code === 45 || code === 48) return ["Fog", "fog"];
-    if (code >= 51 && code <= 57) return ["Drizzle", "rain"];
-    if (code === 61 || code === 80) return ["Light rain", "rain"];
-    if (code === 63 || code === 81) return ["Rain", "rain"];
-    if (code === 65 || code === 82) return ["Heavy rain", "rain"];
-    if (code === 66 || code === 67) return ["Freezing rain", "rain"];
-    if (code >= 71 && code <= 77) return ["Snow", "snow"];
-    if (code === 85 || code === 86) return ["Snow showers", "snow"];
-    if (code >= 95) return ["Thunderstorms", "storm"];
+    // [Arabic text, picture]
+    if (code === 0) return ["صحو", "sun"];
+    if (code === 1) return ["صحو غالبًا", "sun"];
+    if (code === 2) return ["غائم جزئيًا", "part"];
+    if (code === 3) return ["غائم", "cloud"];
+    if (code === 45 || code === 48) return ["ضباب", "fog"];
+    if (code >= 51 && code <= 57) return ["رذاذ", "rain"];
+    if (code === 61 || code === 80) return ["مطر خفيف", "rain"];
+    if (code === 63 || code === 81) return ["مطر", "rain"];
+    if (code === 65 || code === 82) return ["مطر غزير", "rain"];
+    if (code === 66 || code === 67) return ["مطر متجمد", "rain"];
+    if (code >= 71 && code <= 77) return ["ثلج", "snow"];
+    if (code === 85 || code === 86) return ["زخات ثلج", "snow"];
+    if (code >= 95) return ["عواصف رعدية", "storm"];
     return ["", "cloud"];
   }
-  function deg(t) { return Math.round(t) + "\u00b0"; }
-  function icon(kind, night) {
-    var d = document.createElement("div");
-    d.className = "wi " + (kind === "sun" && night ? "moon" : kind);
-    for (var i = 0; i < 3; i++) d.appendChild(document.createElement("i"));
-    return d;
+  function deg(t) { return arabicDigits(Math.round(t)) + "\u00b0"; }
+  // Each picture is a stack of SVG layers. Each layer is its own div, so the TV can move
+  // it with a transform or opacity animation (the only kinds it plays).
+  // [file, left %, top %, width %, height %, animation class]
+  var PICTURES = {
+    sun:       [["sun-rays", 0, 0, 100, 100, "spin"], ["sun-core", 0, 0, 100, 100, ""]],
+    moon:      [["moon", 6, 6, 88, 88, "bob"]],
+    part:      [["sun-rays", 36, 0, 64, 64, "spin"], ["sun-core", 36, 0, 64, 64, ""], ["cloud", 0, 20, 92, 92, "drift"]],
+    partnight: [["moon", 42, 2, 54, 54, "bob"], ["cloud", 0, 20, 92, 92, "drift"]],
+    cloud:     [["cloud-back", 24, 4, 78, 78, "drift2"], ["cloud", 0, 18, 92, 92, "drift"]],
+    rain:      [["cloud-dark", 0, 0, 100, 100, "drift"], ["drops", 18, 56, 64, 44, "fall"], ["drops", 26, 50, 64, 44, "fall late"]],
+    snow:      [["cloud", 0, 0, 100, 100, "drift"], ["flakes", 16, 56, 68, 44, "snowfall"], ["flakes", 24, 50, 60, 40, "snowfall late"]],
+    storm:     [["cloud-dark", 0, 0, 100, 100, "drift"], ["bolt", 34, 48, 36, 52, "flash"], ["drops", 6, 56, 46, 40, "fall"]],
+    fog:       [["cloud", 6, 0, 88, 88, ""], ["fog", 0, 46, 100, 54, "slide"]]
+  };
+  function picture(kind, night, still) {
+    if (night && kind === "sun") kind = "moon";
+    if (night && kind === "part") kind = "partnight";
+    var box = document.createElement("div"), layers = PICTURES[kind] || PICTURES.cloud;
+    box.className = "wpic";
+    for (var i = 0; i < layers.length; i++) {
+      var L = layers[i], outer = document.createElement("div"), inner = document.createElement("div"), img = document.createElement("img");
+      outer.className = "wl";
+      outer.style.left = L[1] + "%"; outer.style.top = L[2] + "%"; outer.style.width = L[3] + "%"; outer.style.height = L[4] + "%";
+      inner.className = "wa" + (still || !L[5] ? "" : " " + L[5]);
+      img.src = "icons/" + L[0] + ".svg"; img.alt = "";
+      inner.appendChild(img); outer.appendChild(inner); box.appendChild(outer);
+    }
+    return box;
+  }
+  function el(tag, cls, text) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text !== undefined) e.appendChild(document.createTextNode(text));
+    return e;
   }
   function renderWeather(w) {
     if (!w || !w.current || !w.daily) return;
-    var c = wmo(w.current.weather_code), night = w.current.is_day === 0;
-    var box = $("weather"), now_ = $("wnow");
-    now_.innerHTML = "";
-    now_.appendChild(icon(c[1], night));
-    var t = document.createElement("span"); t.className = "wt"; t.appendChild(document.createTextNode(deg(w.current.temperature_2m)));
-    now_.appendChild(t);
-    setText($("wdesc"), c[0]);
-    setText($("whl"), "High " + deg(w.daily.temperature_2m_max[0]) + "   Low " + deg(w.daily.temperature_2m_min[0]));
+    var cur = w.current, day = w.daily, c = wmo(cur.weather_code), night = cur.is_day === 0;
+    var nowBox = $("wnow");
+    nowBox.innerHTML = "";
+    nowBox.appendChild(picture(c[1], night, false));
+    nowBox.appendChild(el("span", "wt", deg(cur.temperature_2m)));
+    setText($("wdesc"), c[0] + (cur.apparent_temperature !== undefined ? "  \u00b7  المحسوسة " + deg(cur.apparent_temperature) : ""));
+    var rain = day.precipitation_probability_max ? day.precipitation_probability_max[0] : null;
+    setText($("whl"), "العظمى " + deg(day.temperature_2m_max[0]) + "  \u00b7  الصغرى " + deg(day.temperature_2m_min[0]));
+    setText($("wmore"), (cur.wind_speed_10m !== undefined ? "الرياح " + arabicDigits(Math.round(cur.wind_speed_10m)) + " ميل/س" : "") +
+      (rain !== null && rain !== undefined ? "  \u00b7  المطر " + arabicDigits(rain) + "\u066a" : ""));
     var days = $("wdays");
     days.innerHTML = "";
-    for (var i = 1; i < w.daily.time.length && i <= 3; i++) {
-      var p = w.daily.time[i].split("-"), dd = new Date(+p[0], +p[1] - 1, +p[2]);
-      var row = document.createElement("div"); row.className = "wd";
-      var a = document.createElement("span"); a.className = "wdn"; a.appendChild(document.createTextNode(i === 1 ? "Tomorrow" : DAYS[dd.getDay()].slice(0, 3)));
-      var b = document.createElement("span"); b.className = "wdc"; b.appendChild(document.createTextNode(wmo(w.daily.weather_code[i])[0]));
-      var e = document.createElement("span"); e.className = "wdt";
-      e.appendChild(document.createTextNode(deg(w.daily.temperature_2m_max[i]) + " / " + deg(w.daily.temperature_2m_min[i])));
-      row.appendChild(a); row.appendChild(b); row.appendChild(e); days.appendChild(row);
+    for (var i = 1; i < day.time.length && i <= 3; i++) {
+      var p = day.time[i].split("-"), dd = new Date(+p[0], +p[1] - 1, +p[2]), dc = wmo(day.weather_code[i]);
+      var card = el("div", "wd");
+      card.appendChild(el("div", "wdn", i === 1 ? "غدًا" : DAYS_AR[dd.getDay()]));
+      card.appendChild(picture(dc[1], false, true));
+      card.appendChild(el("div", "wdt", deg(day.temperature_2m_max[i]) + " / " + deg(day.temperature_2m_min[i])));
+      var pr = day.precipitation_probability_max ? day.precipitation_probability_max[i] : null;
+      card.appendChild(el("div", "wdr", pr ? "المطر " + arabicDigits(pr) + "\u066a" : dc[0]));
+      days.appendChild(card);
     }
-    box.className = "shown";
+    $("weather").className = "shown";
   }
   function loadWeather(k) {
     k = k || 0;

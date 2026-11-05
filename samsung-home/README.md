@@ -6,7 +6,8 @@ It shows:
 - "سلام، أبو سعيد", which fades slowly to "سلام، أم سعيد" and back.
 - The time, the English date and the Arabic Hijri date on one line, with the
   next Shia event below.
-- The weather for Bolton now, and for the next three days.
+- The weather for Bolton in Arabic: now (with a moving picture), feels-like,
+  high and low, wind and chance of rain, and cards for the next three days.
 - A saying or hadith each minute, in Arabic and English.
 - Bolton prayer times and a YouTube tile.
 - A sky that follows the sun, with sparkles and shooting stars at night.
@@ -21,7 +22,8 @@ to ISRG Root X2, which this TV does not trust. All other data is on the TV.
 - `app/data.js`: generated sayings, hadith and the Umm al-Qura month table.
 - `app/events.js`: Shia events, copied from `firestick-home`.
 - `tools/build_data.py`: makes `app/data.js` from thaqalayn.net.
-- `tools/subset_font.py`: cuts Amiri down to the Arabic in `data.js`.
+- `app/icons/`: the weather pictures (SVG layers, drawn for this app).
+- `tools/subset_font.py`: cuts Amiri down to the Arabic the app uses.
 - `deploy.sh`: builds, signs, installs and starts the app.
 
 ## Remote
