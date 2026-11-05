@@ -1,7 +1,7 @@
 # Salam: home screen for the Samsung TV
 
 A Tizen web app for a 2015 Samsung TV (UE55J6240, Tizen 2.3, 1920x1080).
-It shows "Salam, Abu Saeed", the time and date, the Hijri date, the next Shia
+It shows "Salam, Abu Saeed" (with a shimmer, sparkles and shooting stars), the time and date, the Hijri date, the next Shia
 event, a saying or hadith each minute, Bolton prayer times and a YouTube tile.
 
 All data is on the TV. The app makes no network calls, except to the TV's own

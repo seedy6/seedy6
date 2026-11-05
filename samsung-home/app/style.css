@@ -56,6 +56,55 @@ body { font-family: "Rajdhani", "SamsungOne", "Helvetica Neue", Arial, sans-seri
 @-webkit-keyframes twinkle { from { opacity: 0.55; } to { opacity: 0.95; } }
 @keyframes twinkle { from { opacity: 0.55; } to { opacity: 0.95; } }
 
+/* ---------- sparkles ---------- */
+.spark { position: absolute; width: 30px; height: 30px; margin: -15px 0 0 -15px; opacity: 0;
+  background: -webkit-radial-gradient(center, circle, rgba(255,255,255,0.95) 0px, rgba(255,230,210,0.35) 4px, rgba(255,255,255,0) 9px);
+  background: radial-gradient(circle at center, rgba(255,255,255,0.95) 0px, rgba(255,230,210,0.35) 4px, rgba(255,255,255,0) 9px);
+  -webkit-animation: sparkle 6s ease-in-out infinite; animation: sparkle 6s ease-in-out infinite; }
+.spark:before, .spark:after { content: ""; position: absolute; left: 14px; top: 0; width: 2px; height: 30px;
+  background: -webkit-linear-gradient(top, rgba(255,255,255,0), #ffffff, rgba(255,255,255,0));
+  background: linear-gradient(to bottom, rgba(255,255,255,0), #ffffff, rgba(255,255,255,0)); }
+.spark:after { -webkit-transform: rotate(90deg); transform: rotate(90deg); }
+.s2 { -webkit-animation-duration: 7.3s; animation-duration: 7.3s; -webkit-animation-delay: 1.7s; animation-delay: 1.7s; }
+.s3 { -webkit-animation-duration: 8.1s; animation-duration: 8.1s; -webkit-animation-delay: 3.9s; animation-delay: 3.9s; }
+.s4 { -webkit-animation-duration: 6.7s; animation-duration: 6.7s; -webkit-animation-delay: 5.2s; animation-delay: 5.2s; }
+.s5 { -webkit-animation-duration: 9.4s; animation-duration: 9.4s; -webkit-animation-delay: 0.8s; animation-delay: 0.8s; }
+.s6 { -webkit-animation-duration: 7.9s; animation-duration: 7.9s; -webkit-animation-delay: 2.9s; animation-delay: 2.9s; }
+@-webkit-keyframes sparkle {
+  0%, 62%, 100% { opacity: 0; -webkit-transform: scale(0.2) rotate(0deg); }
+  76% { opacity: 1; -webkit-transform: scale(1) rotate(45deg); }
+  90% { opacity: 0; -webkit-transform: scale(0.4) rotate(90deg); } }
+@keyframes sparkle {
+  0%, 62%, 100% { opacity: 0; transform: scale(0.2) rotate(0deg); }
+  76% { opacity: 1; transform: scale(1) rotate(45deg); }
+  90% { opacity: 0; transform: scale(0.4) rotate(90deg); } }
+.meteor { position: absolute; left: 0; top: 0; width: 240px; height: 2px; border-radius: 2px; opacity: 0;
+  background: -webkit-linear-gradient(left, rgba(255,255,255,0), rgba(255,244,236,0.95));
+  background: linear-gradient(to right, rgba(255,255,255,0), rgba(255,244,236,0.95)); }
+.m1 { -webkit-animation: meteor1 23s linear 6s infinite; animation: meteor1 23s linear 6s infinite; }
+.m2 { -webkit-animation: meteor2 37s linear 17s infinite; animation: meteor2 37s linear 17s infinite; }
+@-webkit-keyframes meteor1 {
+  0% { opacity: 0; -webkit-transform: translate(260px, 40px) rotate(22deg); }
+  1% { opacity: 1; }
+  5% { opacity: 0; -webkit-transform: translate(900px, 300px) rotate(22deg); }
+  100% { opacity: 0; -webkit-transform: translate(900px, 300px) rotate(22deg); } }
+@keyframes meteor1 {
+  0% { opacity: 0; transform: translate(260px, 40px) rotate(22deg); }
+  1% { opacity: 1; }
+  5% { opacity: 0; transform: translate(900px, 300px) rotate(22deg); }
+  100% { opacity: 0; transform: translate(900px, 300px) rotate(22deg); } }
+@-webkit-keyframes meteor2 {
+  0% { opacity: 0; -webkit-transform: translate(1050px, 10px) rotate(18deg); }
+  0.8% { opacity: 1; }
+  3.5% { opacity: 0; -webkit-transform: translate(1650px, 205px) rotate(18deg); }
+  100% { opacity: 0; -webkit-transform: translate(1650px, 205px) rotate(18deg); } }
+@keyframes meteor2 {
+  0% { opacity: 0; transform: translate(1050px, 10px) rotate(18deg); }
+  0.8% { opacity: 1; }
+  3.5% { opacity: 0; transform: translate(1650px, 205px) rotate(18deg); }
+  100% { opacity: 0; transform: translate(1650px, 205px) rotate(18deg); } }
+.day .spark, .day .meteor, .dusk .meteor, .dawn .meteor { display: none; }
+
 /* ---------- hills ---------- */
 #hills { position: absolute; left: 0; top: 0; }
 .night .h1 { fill: #241640; } .night .h2 { fill: #1a1033; } .night .h3 { fill: #110a24; }
@@ -64,20 +113,34 @@ body { font-family: "Rajdhani", "SamsungOne", "Helvetica Neue", Arial, sans-seri
 .dusk  .h1 { fill: #6b2e5c; } .dusk  .h2 { fill: #4a2049; } .dusk  .h3 { fill: #2c1430; }
 
 /* ---------- fades (text moves every few minutes) ---------- */
-.fade { opacity: 1; -webkit-transition: opacity 1.4s ease-in-out; transition: opacity 1.4s ease-in-out; }
-.fade.out { opacity: 0; }
+.fade { opacity: 1; -webkit-transform: translate(0, 0); transform: translate(0, 0);
+  -webkit-transition: opacity 1.4s ease-in-out, -webkit-transform 1.4s ease-out; transition: opacity 1.4s ease-in-out, transform 1.4s ease-out; }
+.fade.out { opacity: 0; -webkit-transform: translate(0, 16px); transform: translate(0, 16px); }
 
 /* ---------- greeting ---------- */
 #hello { position: absolute; left: 150px; top: 90px; width: 1320px; }
-#part { font-size: 30px; letter-spacing: 10px; text-transform: uppercase; color: #ffd2b8; opacity: 0.85; }
 h1 { margin: 4px 0 0 -5px; font-size: 150px; line-height: 1; font-weight: 700; letter-spacing: 2px;
   color: #fff6ef; text-shadow: 0 6px 40px rgba(20,8,40,0.45); }
-h1 span { color: #ffc9a8; }
+h1 span { color: #ffc9a8; text-shadow: none;
+  background-image: -webkit-linear-gradient(left, #ffc9a8 0%, #ffc9a8 40%, #fff4ea 46%, #ffffff 50%, #fff4ea 54%, #ffc9a8 60%, #ffc9a8 100%);
+  background-image: linear-gradient(to right, #ffc9a8 0%, #ffc9a8 40%, #fff4ea 46%, #ffffff 50%, #fff4ea 54%, #ffc9a8 60%, #ffc9a8 100%);
+  background-size: 260% 100%; background-position: 100% 0;
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  -webkit-animation: shimmer 9s ease-in-out infinite; animation: shimmer 9s ease-in-out infinite; }
+@-webkit-keyframes shimmer { 0% { background-position: 100% 0; } 30% { background-position: 0% 0; } 100% { background-position: 0% 0; } }
+@keyframes shimmer { 0% { background-position: 100% 0; } 30% { background-position: 0% 0; } 100% { background-position: 0% 0; } }
 .rule { width: 200px; height: 3px; margin: 26px 0 22px;
   background: -webkit-linear-gradient(left, #ffc9a8, rgba(255,201,168,0));
-  background: linear-gradient(to right, #ffc9a8, rgba(255,201,168,0)); }
+  background: linear-gradient(to right, #ffc9a8, rgba(255,201,168,0));
+  -webkit-animation: rule 9s ease-in-out infinite; animation: rule 9s ease-in-out infinite; }
+@-webkit-keyframes rule { 0%, 100% { width: 200px; opacity: 0.8; } 50% { width: 320px; opacity: 1; } }
+@keyframes rule { 0%, 100% { width: 200px; opacity: 0.8; } 50% { width: 320px; opacity: 1; } }
 #when { font-size: 42px; color: #f3e1f0; letter-spacing: 2px; }
 #time { font-weight: 700; color: #fff6ef; }
+.dot { -webkit-animation: pulse 2.4s ease-in-out infinite; animation: pulse 2.4s ease-in-out infinite;
+  -webkit-box-shadow: 0 0 12px #ffc9a8; box-shadow: 0 0 12px #ffc9a8; }
+@-webkit-keyframes pulse { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
+@keyframes pulse { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
 .dot { display: inline-block; width: 8px; height: 8px; margin: 0 20px 9px; border-radius: 50%; background: #ffc9a8; vertical-align: middle; }
 #hijri { margin-top: 8px; font-size: 34px; color: #e6d3ee; letter-spacing: 2px; }
 #event { margin-top: 6px; font-size: 30px; letter-spacing: 1px; color: #ffd9a0; }
@@ -85,7 +148,9 @@ h1 span { color: #ffc9a8; }
 #event b { font-weight: 700; letter-spacing: 3px; text-transform: uppercase; font-size: 22px; margin-right: 14px; opacity: 0.85; }
 
 /* ---------- saying ---------- */
-#saying { position: absolute; left: 200px; width: 1520px; top: 570px; text-align: center; }
+#saying { position: absolute; left: 200px; width: 1520px; top: 590px; text-align: center; }
+#saying:before { content: ""; display: block; width: 12px; height: 12px; margin: 0 auto 24px;
+  border: 2px solid #ffc9a8; opacity: 0.8; -webkit-transform: rotate(45deg); transform: rotate(45deg); }
 #saying .ar { font-family: "AmiriSub", serif; font-size: 50px; line-height: 1.55; color: #fff6ef; direction: rtl;
   text-shadow: 0 4px 24px rgba(20,8,40,0.5); }
 #saying .en { margin: 10px auto 0; max-width: 1400px; font-size: 31px; line-height: 1.3; color: #f0dff0; }

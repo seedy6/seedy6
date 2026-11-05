@@ -86,8 +86,7 @@
     else if (m >= t.sunset - 50 && m < t.sunset + 40) sky = "dusk";
     else if (m >= t.sunrise + 50 && m < t.sunset - 50) sky = "day";
     else sky = "night";
-    var hello = h < 4 ? "Good night" : h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
-    return [sky, hello];
+    return [sky];
   }
 
   // ---------- Hijri date (Umm al-Qura table in data.js) ----------
@@ -157,7 +156,6 @@
     setText($("date"), DAYS[d.getDay()] + " " + d.getDate() + " " + MONTHS[d.getMonth()]);
     var p = partOfDay(d);
     if (p[0] !== lastPart) { stage.className = p[0]; lastPart = p[0]; }
-    setText($("part"), p[1]);
     var key = d.getFullYear() + "-" + d.getMonth() + "-" + d.getDate();
     if (key !== lastDay) { lastDay = key; renderIslamic(d); }
     renderPrayers(d);
