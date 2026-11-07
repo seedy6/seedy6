@@ -6,9 +6,11 @@ It shows:
 - "سلام، أبو سعيد", which fades slowly to "سلام، أم سعيد" and back.
 - The time, the English date and the Arabic Hijri date on one line, with the
   next Shia event below.
-- The weather for Bolton in Arabic: now (with a moving picture), feels-like,
+- The weather for Bolton in English: now (with a moving picture), feels-like,
   high and low, wind and chance of rain, and cards for the next three days.
 - A saying or hadith each minute, in Arabic and English.
+- The grandchildren, one at a time (a new one every 20 seconds): photo, name and
+  age to the day ("1 year, 2 months and 7 days"), with a birthday message.
 - Bolton prayer times, a YouTube tile, and an iStar tile that shows the iStar
   box on HDMI 2 inside the app (press Back to return).
 - A sky that follows the sun, with sparkles and shooting stars at night.
@@ -25,7 +27,21 @@ to ISRG Root X2, which this TV does not trust. All other data is on the TV.
 - `tools/build_data.py`: makes `app/data.js` from thaqalayn.net.
 - `app/icons/`: the weather pictures (SVG layers, drawn for this app).
 - `tools/subset_font.py`: cuts Amiri down to the Arabic the app uses.
+- `tools/prepare_family.py`: makes the grandchildren cards from a private folder.
 - `deploy.sh`: builds, signs, installs and starts the app.
+
+## Grandchildren (private)
+
+This repo is public, so the photos, names and birth dates are never in it.
+`app/family/` is in `.gitignore`.
+
+1. Put the photos in `~/Pictures/Salam family/` with a `family.json`:
+   `[{"name": "...", "born": "YYYY-MM-DD", "photo": "IMG_1234.HEIC"}, ...]`
+2. Run `python3 tools/prepare_family.py`. It crops each photo square around the
+   face and writes `~/Pictures/Salam family/tv/`.
+3. Run `./deploy.sh`. It copies that folder onto the TV as `family/`.
+
+Set `FAMILY_DIR` to use another folder.
 
 ## Remote
 

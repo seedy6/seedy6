@@ -18,6 +18,15 @@ work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
 
 cp -R "$here/app/." "$work/"
+# The grandchildren cards come from a private folder, never from this public repo.
+FAMILY_DIR="${FAMILY_DIR:-$HOME/Pictures/Salam family}"
+rm -rf "$work/family"
+if [ -f "$FAMILY_DIR/tv/family.js" ]; then
+  mkdir -p "$work/family" && cp "$FAMILY_DIR/tv/"* "$work/family/"
+  echo "Family cards: $(ls "$work/family" | grep -c jpg) photos from $FAMILY_DIR/tv"
+else
+  echo "Family cards: none ($FAMILY_DIR/tv/family.js not found)"
+fi
 "$TIZEN" package -t wgt -s "$PROFILE" -- "$work"
 wgt="$(ls "$work"/*.wgt)"
 echo "Built $wgt"

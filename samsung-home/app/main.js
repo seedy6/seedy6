@@ -30,6 +30,7 @@
 
   var $ = function (id) { return document.getElementById(id); };
   var stage = $("stage");
+  var HAS_KIDS = !!(window.SALAM_FAMILY && window.SALAM_FAMILY.length);
   var onTV = typeof window.tizen !== "undefined" && window.tizen.application;
   function now() { return window.SKY_TEST ? new Date(window.SKY_TEST.getTime()) : new Date(); }
   function pad(n) { return n < 10 ? "0" + n : "" + n; }
@@ -195,7 +196,7 @@
     setText($("time"), pad(d.getHours()) + ":" + pad(d.getMinutes()));
     setText($("date"), DAYS[d.getDay()] + " " + d.getDate() + " " + MONTHS[d.getMonth()]);
     var p = partOfDay(d);
-    if (p[0] !== lastPart) { stage.className = p[0]; lastPart = p[0]; }
+    if (p[0] !== lastPart) { stage.className = p[0] + (HAS_KIDS ? " haskids" : ""); lastPart = p[0]; }
     var key = d.getFullYear() + "-" + d.getMonth() + "-" + d.getDate();
     if (key !== lastDay) { lastDay = key; renderIslamic(d); }
     renderPrayers(d);
@@ -230,6 +231,61 @@
   setInterval(nextSaying, SAYING_SECONDS * 1000);
   window.nextSaying = nextSaying;
 
+  // ---------- grandchildren (private data in family/family.js) ----------
+  // window.SALAM_FAMILY = [{ name: "...", born: "YYYY-MM-DD", photo: "family/x.jpg" }, ...]
+  var KID_SECONDS = 20;
+  function daysInMonth(y, m) { return new Date(y, m + 1, 0).getDate(); }   // m: 0-11
+  function plural(n, word) { return n + " " + word + (n === 1 ? "" : "s"); }
+  // Calendar age to the day: whole months since birth (a 31st counts as the last day
+  // of a shorter month), then the days left over.
+  function ageText(born, today) {
+    var b = born.split("-"), by = +b[0], bm = +b[1] - 1, bd = +b[2];
+    var ty = today.getFullYear(), tm = today.getMonth(), td = today.getDate();
+    var months = (ty - by) * 12 + (tm - bm);
+    function anchor(n) {           // the birth date moved on by n months
+      var yy = by + Math.floor((bm + n) / 12), mm = (bm + n) % 12;
+      return dayNum(yy, mm, Math.min(bd, daysInMonth(yy, mm)));
+    }
+    var t = dayNum(ty, tm, td);
+    if (months > 0 && anchor(months) > t) months -= 1;
+    if (months < 0 || (months === 0 && anchor(0) > t)) return "";
+    var d = t - anchor(months), y = Math.floor(months / 12), m = months % 12;
+    if (y === 0 && m === 0 && d === 0) return "Born today";
+    var parts = [];
+    if (y) parts.push(plural(y, "year"));
+    if (m) parts.push(plural(m, "month"));
+    if (d || !parts.length) parts.push(plural(d, "day"));
+    return parts.length > 1 ? parts.slice(0, -1).join(", ") + " and " + parts[parts.length - 1] : parts[0];
+  }
+  window.ageText = ageText;
+  var kids = window.SALAM_FAMILY || [], kidIndex = 0, kidDivs = [];
+  function renderKidAges() {
+    var t = now();
+    for (var i = 0; i < kids.length; i++) {
+      var k = kids[i], b = k.born.split("-"), a = kidDivs[i].getElementsByTagName("div")[1];
+      var birthday = +b[1] - 1 === t.getMonth() && +b[2] === t.getDate() && +b[0] < t.getFullYear();
+      setText(a, birthday ? "Happy birthday! " + plural(t.getFullYear() - +b[0], "year") + " old today" : ageText(k.born, t));
+      a.className = "ka" + (birthday ? " bday" : "");
+    }
+  }
+  if (kids.length) {
+    for (var ki = 0; ki < kids.length; ki++) {
+      var card = el("div", "kid" + (ki === 0 ? " on" : "")), img = document.createElement("img");
+      img.className = "ph"; img.src = kids[ki].photo; img.alt = "";
+      card.appendChild(img); card.appendChild(el("div", "kn", kids[ki].name)); card.appendChild(el("div", "ka", ""));
+      $("kids").appendChild(card); kidDivs.push(card);
+    }
+    renderKidAges();
+    setInterval(renderKidAges, 60000);
+    if (kids.length > 1) {
+      setInterval(function () {
+        kidDivs[kidIndex].className = "kid";
+        kidIndex = (kidIndex + 1) % kids.length;
+        kidDivs[kidIndex].className = "kid on";
+      }, KID_SECONDS * 1000);
+    }
+  }
+
   // ---------- the name: Abu Saeed and Um Saeed take turns, with a slow fade ----------
   var nameIndex = 0;
   function nameCycle() {
@@ -253,25 +309,24 @@
     "&wind_speed_unit=mph&timezone=Europe%2FLondon&forecast_days=4";
   var WEATHER_URLS = ["http://api.open-meteo.com" + WEATHER_QUERY, "https://api.open-meteo.com" + WEATHER_QUERY];
   var weatherStatus = "not loaded";
-  var DAYS_AR = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
   function wmo(code) {
-    // [Arabic text, picture]
-    if (code === 0) return ["صحو", "sun"];
-    if (code === 1) return ["صحو غالبًا", "sun"];
-    if (code === 2) return ["غائم جزئيًا", "part"];
-    if (code === 3) return ["غائم", "cloud"];
-    if (code === 45 || code === 48) return ["ضباب", "fog"];
-    if (code >= 51 && code <= 57) return ["رذاذ", "rain"];
-    if (code === 61 || code === 80) return ["مطر خفيف", "rain"];
-    if (code === 63 || code === 81) return ["مطر", "rain"];
-    if (code === 65 || code === 82) return ["مطر غزير", "rain"];
-    if (code === 66 || code === 67) return ["مطر متجمد", "rain"];
-    if (code >= 71 && code <= 77) return ["ثلج", "snow"];
-    if (code === 85 || code === 86) return ["زخات ثلج", "snow"];
-    if (code >= 95) return ["عواصف رعدية", "storm"];
+    // [text, picture]
+    if (code === 0) return ["Clear", "sun"];
+    if (code === 1) return ["Mostly clear", "sun"];
+    if (code === 2) return ["Partly cloudy", "part"];
+    if (code === 3) return ["Cloudy", "cloud"];
+    if (code === 45 || code === 48) return ["Fog", "fog"];
+    if (code >= 51 && code <= 57) return ["Drizzle", "rain"];
+    if (code === 61 || code === 80) return ["Light rain", "rain"];
+    if (code === 63 || code === 81) return ["Rain", "rain"];
+    if (code === 65 || code === 82) return ["Heavy rain", "rain"];
+    if (code === 66 || code === 67) return ["Freezing rain", "rain"];
+    if (code >= 71 && code <= 77) return ["Snow", "snow"];
+    if (code === 85 || code === 86) return ["Snow showers", "snow"];
+    if (code >= 95) return ["Thunderstorms", "storm"];
     return ["", "cloud"];
   }
-  function deg(t) { return arabicDigits(Math.round(t)) + "\u00b0"; }
+  function deg(t) { return Math.round(t) + "\u00b0"; }
   // Each picture is a stack of SVG layers. Each layer is its own div, so the TV can move
   // it with a transform or opacity animation (the only kinds it plays).
   // [file, left %, top %, width %, height %, animation class]
@@ -314,21 +369,21 @@
     nowBox.innerHTML = "";
     nowBox.appendChild(picture(c[1], night, false));
     nowBox.appendChild(el("span", "wt", deg(cur.temperature_2m)));
-    setText($("wdesc"), c[0] + (cur.apparent_temperature !== undefined ? "  \u00b7  المحسوسة " + deg(cur.apparent_temperature) : ""));
+    setText($("wdesc"), c[0] + (cur.apparent_temperature !== undefined ? "  \u00b7  feels " + deg(cur.apparent_temperature) : ""));
     var rain = day.precipitation_probability_max ? day.precipitation_probability_max[0] : null;
-    setText($("whl"), "العظمى " + deg(day.temperature_2m_max[0]) + "  \u00b7  الصغرى " + deg(day.temperature_2m_min[0]));
-    setText($("wmore"), (cur.wind_speed_10m !== undefined ? "الرياح " + arabicDigits(Math.round(cur.wind_speed_10m)) + " ميل/س" : "") +
-      (rain !== null && rain !== undefined ? "  \u00b7  المطر " + arabicDigits(rain) + "%" : ""));
+    setText($("whl"), "High " + deg(day.temperature_2m_max[0]) + "  \u00b7  Low " + deg(day.temperature_2m_min[0]));
+    setText($("wmore"), (cur.wind_speed_10m !== undefined ? "Wind " + Math.round(cur.wind_speed_10m) + " mph" : "") +
+      (rain !== null && rain !== undefined ? "  \u00b7  Rain " + rain + "%" : ""));
     var days = $("wdays");
     days.innerHTML = "";
     for (var i = 1; i < day.time.length && i <= 3; i++) {
       var p = day.time[i].split("-"), dd = new Date(+p[0], +p[1] - 1, +p[2]), dc = wmo(day.weather_code[i]);
       var card = el("div", "wd");
-      card.appendChild(el("div", "wdn", i === 1 ? "غدًا" : DAYS_AR[dd.getDay()]));
+      card.appendChild(el("div", "wdn", i === 1 ? "Tomorrow" : DAYS[dd.getDay()].slice(0, 3)));
       card.appendChild(picture(dc[1], false, true));
       card.appendChild(el("div", "wdt", deg(day.temperature_2m_max[i]) + " / " + deg(day.temperature_2m_min[i])));
       var pr = day.precipitation_probability_max ? day.precipitation_probability_max[i] : null;
-      card.appendChild(el("div", "wdr", pr ? "المطر " + arabicDigits(pr) + "%" : dc[0]));
+      card.appendChild(el("div", "wdr", pr ? "Rain " + pr + "%" : dc[0]));
       days.appendChild(card);
     }
     $("weather").className = "shown";
