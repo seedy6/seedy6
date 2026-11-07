@@ -3,6 +3,8 @@
 
 The folder (default: ~/Pictures/Salam family) holds the original photos and family.json:
   [{"name": "Zahra", "born": "2025-03-14", "photo": "IMG_1234.HEIC"}, ...]
+Add "crop": [left, top, size] (pixels, after rotation) when the photo has other people
+in it: the face finder picks the largest face.
 This writes <folder>/tv/: one square JPEG per child, cropped around the face, and family.js.
 deploy.sh copies <folder>/tv/ into the app as family/ on the TV.
 
@@ -42,11 +44,16 @@ def square_around_face(im):
 
 entries = []
 for i, k in enumerate(kids):
-    im, found = square_around_face(load(os.path.join(folder, k["photo"])))
+    im = load(os.path.join(folder, k["photo"]))
+    if "crop" in k:
+        l, t, side = k["crop"]
+        im, found = im.crop((l, t, l + side, t + side)), "manual crop"
+    else:
+        im, found = square_around_face(im)
     name = "kid%d.jpg" % (i + 1)
     im.resize((SIZE, SIZE), Image.LANCZOS).save(os.path.join(out, name), quality=86)
     entries.append({"name": k["name"], "born": k["born"], "photo": "family/" + name})
-    print("%-12s born %s  %s  face %s" % (k["name"], k["born"], name, "found" if found else "NOT found, centre crop"))
+    print("%-12s born %s  %s  face %s" % (k["name"], k["born"], name, found if isinstance(found, str) else ("found" if found else "NOT found, centre crop")))
 with open(os.path.join(out, "family.js"), "w", encoding="utf-8") as f:
     f.write("// Private: made by tools/prepare_family.py. Do not commit.\n")
     f.write("window.SALAM_FAMILY = " + json.dumps(entries, ensure_ascii=False, indent=1) + ";\n")
