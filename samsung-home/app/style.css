@@ -184,12 +184,18 @@ h1 .name.out { opacity: 0; }
 .slide { -webkit-animation: wdrift 6s ease-in-out infinite alternate; animation: wdrift 6s ease-in-out infinite alternate; }
 
 /* ---------- grandchildren: one at a time, with a slow cross-fade ---------- */
-#kids { position: absolute; right: 150px; top: 548px; width: 400px; height: 310px; display: none; }
+#kids { position: absolute; right: 120px; top: 548px; width: 440px; height: 310px; display: none; }
 .haskids #kids { display: block; }
-.kid { position: absolute; left: 0; top: 0; width: 400px; text-align: center; opacity: 0;
+/* the title stays; the photo, name and age cross-fade for each child */
+#kidsTitle { position: absolute; left: 248px; top: 40px; width: 192px; text-align: left; }
+#kidsTitle .kt-en { font-size: 30px; line-height: 1.12; letter-spacing: 1px; color: #ffc9a8; }
+#kidsTitle .kt-ar { margin-top: 10px; font-family: "AmiriSub", serif; font-size: 52px; line-height: 1.3; color: #fff6ef;
+  text-align: left; }
+#kidsTitle:before { content: ""; display: block; width: 46px; height: 3px; margin-bottom: 14px; background: #ffc9a8; opacity: 0.8; }
+.kid { position: absolute; left: 0; top: 0; width: 440px; text-align: left; opacity: 0;
   -webkit-transition: opacity 2s ease-in-out; transition: opacity 2s ease-in-out; }
 .kid.on { opacity: 1; }
-.kid .ph { display: block; width: 214px; height: 214px; margin: 0 auto; border-radius: 50%; border: 4px solid #ffc9a8;
+.kid .ph { display: block; width: 214px; height: 214px; margin: 0; border-radius: 50%; border: 4px solid #ffc9a8;
   -webkit-box-shadow: 0 0 34px rgba(255,201,168,0.45), 0 14px 40px rgba(10,4,30,0.5);
   box-shadow: 0 0 34px rgba(255,201,168,0.45), 0 14px 40px rgba(10,4,30,0.5); }
 .kid .kn { margin-top: 14px; font-size: 42px; line-height: 1.1; font-weight: 700; color: #fff6ef; letter-spacing: 1px; }
