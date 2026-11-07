@@ -218,7 +218,16 @@
     setText(divs[0], s.ar);
     setText(divs[1], s.en);
     setText(divs[2], s.by + "  ·  " + s.src);
+    placeSaying();
   }
+  // Between the two family cards, centre the saying on them (photo to age line,
+  // y 548 to 858), but keep it below the date block and above the tiles.
+  function placeSaying() {
+    if (!HAS_PARENTS) return;
+    var box = $("saying"), h = box.offsetHeight, top = Math.round(703 - h / 2);
+    box.style.top = Math.max(450, Math.min(top, 850 - h)) + "px";
+  }
+  window.addEventListener("load", placeSaying);   // again when the web fonts have loaded
   function nextSaying() {
     var box = $("saying");
     box.className = "fade out";
