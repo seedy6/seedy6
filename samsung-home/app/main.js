@@ -31,6 +31,7 @@
   var $ = function (id) { return document.getElementById(id); };
   var stage = $("stage");
   var HAS_KIDS = !!(window.SALAM_FAMILY && window.SALAM_FAMILY.length);
+  var HAS_PARENTS = HAS_KIDS && !!(window.SALAM_PARENTS && window.SALAM_PARENTS.length);
   var onTV = typeof window.tizen !== "undefined" && window.tizen.application;
   function now() { return window.SKY_TEST ? new Date(window.SKY_TEST.getTime()) : new Date(); }
   function pad(n) { return n < 10 ? "0" + n : "" + n; }
@@ -196,7 +197,7 @@
     setText($("time"), pad(d.getHours()) + ":" + pad(d.getMinutes()));
     setText($("date"), DAYS[d.getDay()] + " " + d.getDate() + " " + MONTHS[d.getMonth()]);
     var p = partOfDay(d);
-    if (p[0] !== lastPart) { stage.className = p[0] + (HAS_KIDS ? " haskids" : ""); lastPart = p[0]; }
+    if (p[0] !== lastPart) { stage.className = p[0] + (HAS_KIDS ? " haskids" : "") + (HAS_PARENTS ? " hasparents" : ""); lastPart = p[0]; }
     var key = d.getFullYear() + "-" + d.getMonth() + "-" + d.getDate();
     if (key !== lastDay) { lastDay = key; renderIslamic(d); }
     renderPrayers(d);
@@ -259,30 +260,47 @@
   }
   window.ageText = ageText;
   var kids = window.SALAM_FAMILY || [], kidIndex = 0, kidDivs = [];
+  // Parents ("Our Children"): each card goes with the grandchildren named in its "kids".
+  var parents = window.SALAM_PARENTS || [], parentDivs = [], parentShown = -1;
+  function ageLine(div, born) {
+    var t = now(), b = born.split("-");
+    var birthday = +b[1] - 1 === t.getMonth() && +b[2] === t.getDate() && +b[0] < t.getFullYear();
+    setText(div, birthday ? "Happy birthday! " + plural(t.getFullYear() - +b[0], "year") + " old today" : ageText(born, t));
+    div.className = "ka" + (birthday ? " bday" : "");
+  }
   function renderKidAges() {
-    var t = now();
-    for (var i = 0; i < kids.length; i++) {
-      var k = kids[i], b = k.born.split("-"), a = kidDivs[i].getElementsByTagName("div")[1];
-      var birthday = +b[1] - 1 === t.getMonth() && +b[2] === t.getDate() && +b[0] < t.getFullYear();
-      setText(a, birthday ? "Happy birthday! " + plural(t.getFullYear() - +b[0], "year") + " old today" : ageText(k.born, t));
-      a.className = "ka" + (birthday ? " bday" : "");
+    for (var i = 0; i < kids.length; i++) ageLine(kidDivs[i].getElementsByTagName("div")[1], kids[i].born);
+    for (var j = 0; j < parents.length; j++) if (parents[j].born) ageLine(parentDivs[j].getElementsByTagName("div")[1], parents[j].born);
+  }
+  function makeCard(person, box) {
+    var card = el("div", "kid"), img = document.createElement("img");
+    img.className = "ph"; img.src = person.photo; img.alt = "";
+    card.appendChild(img); card.appendChild(el("div", "kn", person.name)); card.appendChild(el("div", "ka", ""));
+    box.appendChild(card);
+    return card;
+  }
+  function parentOf(kidName) {
+    for (var i = 0; i < parents.length; i++) {
+      for (var j = 0; j < parents[i].kids.length; j++) if (parents[i].kids[j] === kidName) return i;
+    }
+    return -1;
+  }
+  function showKid(i) {
+    for (var k = 0; k < kidDivs.length; k++) kidDivs[k].className = "kid" + (k === i ? " on" : "");
+    var p = parentOf(kids[i].name);
+    if (p !== parentShown) {          // same parents as before: their card stays still
+      for (var q = 0; q < parentDivs.length; q++) parentDivs[q].className = "kid" + (q === p ? " on" : "");
+      parentShown = p;
     }
   }
   if (kids.length) {
-    for (var ki = 0; ki < kids.length; ki++) {
-      var card = el("div", "kid" + (ki === 0 ? " on" : "")), img = document.createElement("img");
-      img.className = "ph"; img.src = kids[ki].photo; img.alt = "";
-      card.appendChild(img); card.appendChild(el("div", "kn", kids[ki].name)); card.appendChild(el("div", "ka", ""));
-      $("kids").appendChild(card); kidDivs.push(card);
-    }
+    for (var ki = 0; ki < kids.length; ki++) kidDivs.push(makeCard(kids[ki], $("kids")));
+    if (HAS_PARENTS) for (var pi = 0; pi < parents.length; pi++) parentDivs.push(makeCard(parents[pi], $("parents")));
     renderKidAges();
+    showKid(0);
     setInterval(renderKidAges, 60000);
     if (kids.length > 1) {
-      setInterval(function () {
-        kidDivs[kidIndex].className = "kid";
-        kidIndex = (kidIndex + 1) % kids.length;
-        kidDivs[kidIndex].className = "kid on";
-      }, KID_SECONDS * 1000);
+      setInterval(function () { kidIndex = (kidIndex + 1) % kids.length; showKid(kidIndex); }, KID_SECONDS * 1000);
     }
   }
 

@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
-"""Make the TV's grandchildren cards from a PRIVATE folder (never from this public repo).
+"""Make the TV's family cards from a PRIVATE folder (never from this public repo).
 
 The folder (default: ~/Pictures/Salam family) holds the original photos and family.json:
-  [{"name": "Zahra", "born": "2025-03-14", "photo": "IMG_1234.HEIC"}, ...]
+  {"grandchildren": [{"name": "Zahra", "born": "2025-03-14", "photo": "IMG_1234.HEIC"}, ...],
+   "children":      [{"name": "Ali & Fatima", "photo": "x.jpg", "kids": ["Zahra"]}, ...]}
+"children" are the parents: their card shows with the grandchildren named in "kids".
+"born" is optional for them. (A plain list is read as grandchildren only.)
 Add "crop": [left, top, size] (pixels, after rotation) when the photo has other people
 in it: the face finder picks the largest face.
 This writes <folder>/tv/: one square JPEG per child, cropped around the face, and family.js.
@@ -17,7 +20,8 @@ from PIL import Image, ImageOps
 folder = os.path.expanduser(sys.argv[1] if len(sys.argv) > 1 else "~/Pictures/Salam family")
 out = os.path.join(folder, "tv")
 os.makedirs(out, exist_ok=True)
-kids = json.load(open(os.path.join(folder, "family.json"), encoding="utf-8"))
+data = json.load(open(os.path.join(folder, "family.json"), encoding="utf-8"))
+if isinstance(data, list): data = {"grandchildren": data, "children": []}
 cascade = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
 SIZE = 420
 
@@ -42,19 +46,33 @@ def square_around_face(im):
     top = min(max(cy - side / 2, 0), h - side)
     return im.crop((int(left), int(top), int(left + side), int(top + side))), bool(len(faces))
 
-entries = []
-for i, k in enumerate(kids):
+def card(k, filename):
     im = load(os.path.join(folder, k["photo"]))
     if "crop" in k:
         l, t, side = k["crop"]
         im, found = im.crop((l, t, l + side, t + side)), "manual crop"
     else:
         im, found = square_around_face(im)
-    name = "kid%d.jpg" % (i + 1)
-    im.resize((SIZE, SIZE), Image.LANCZOS).save(os.path.join(out, name), quality=86)
-    entries.append({"name": k["name"], "born": k["born"], "photo": "family/" + name})
-    print("%-12s born %s  %s  face %s" % (k["name"], k["born"], name, found if isinstance(found, str) else ("found" if found else "NOT found, centre crop")))
+    im.resize((SIZE, SIZE), Image.LANCZOS).save(os.path.join(out, filename), quality=86)
+    print("%-26s %-10s %s  face %s" % (k["name"], k.get("born", ""), filename,
+          found if isinstance(found, str) else ("found" if found else "NOT found, centre crop")))
+    e = {"name": k["name"], "photo": "family/" + filename}
+    if k.get("born"): e["born"] = k["born"]
+    return e
+
+for f in os.listdir(out):                      # no stale cards from an earlier run
+    if f.endswith(".jpg"): os.remove(os.path.join(out, f))
+kids = [card(k, "kid%d.jpg" % (i + 1)) for i, k in enumerate(data.get("grandchildren", []))]
+names = set(k["name"] for k in kids)
+parents = []
+for i, p in enumerate(data.get("children", [])):
+    e = card(p, "parent%d.jpg" % (i + 1))
+    e["kids"] = p.get("kids", [])
+    unknown = [n for n in e["kids"] if n not in names]
+    if unknown: sys.exit("%s: these grandchildren are not in the list: %s" % (p["name"], unknown))
+    parents.append(e)
 with open(os.path.join(out, "family.js"), "w", encoding="utf-8") as f:
     f.write("// Private: made by tools/prepare_family.py. Do not commit.\n")
-    f.write("window.SALAM_FAMILY = " + json.dumps(entries, ensure_ascii=False, indent=1) + ";\n")
+    f.write("window.SALAM_FAMILY = " + json.dumps(kids, ensure_ascii=False, indent=1) + ";\n")
+    f.write("window.SALAM_PARENTS = " + json.dumps(parents, ensure_ascii=False, indent=1) + ";\n")
 print("->", out)

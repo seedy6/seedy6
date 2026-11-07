@@ -187,11 +187,13 @@ h1 .name.out { opacity: 0; }
 #kids { position: absolute; right: 120px; top: 548px; width: 440px; height: 310px; display: none; }
 .haskids #kids { display: block; }
 /* the title stays; the photo, name and age cross-fade for each child */
-#kidsTitle { position: absolute; left: 248px; top: 40px; width: 192px; text-align: left; }
-#kidsTitle .kt-en { font-size: 30px; line-height: 1.12; letter-spacing: 1px; color: #ffc9a8; }
-#kidsTitle .kt-ar { margin-top: 10px; font-family: "AmiriSub", serif; font-size: 52px; line-height: 1.3; color: #fff6ef;
+.ftitle { position: absolute; left: 248px; top: 40px; width: 192px; text-align: left; }
+#parents { position: absolute; left: 120px; top: 548px; width: 440px; height: 310px; display: none; }
+.hasparents #parents { display: block; }
+.ftitle .kt-en { font-size: 30px; line-height: 1.12; letter-spacing: 1px; color: #ffc9a8; }
+.ftitle .kt-ar { margin-top: 10px; font-family: "AmiriSub", serif; font-size: 52px; line-height: 1.3; color: #fff6ef;
   text-align: left; }
-#kidsTitle:before { content: ""; display: block; width: 46px; height: 3px; margin-bottom: 14px; background: #ffc9a8; opacity: 0.8; }
+.ftitle:before { content: ""; display: block; width: 46px; height: 3px; margin-bottom: 14px; background: #ffc9a8; opacity: 0.8; }
 .kid { position: absolute; left: 0; top: 0; width: 440px; text-align: left; opacity: 0;
   -webkit-transition: opacity 2s ease-in-out; transition: opacity 2s ease-in-out; }
 .kid.on { opacity: 1; }
@@ -205,6 +207,12 @@ h1 .name.out { opacity: 0; }
 .haskids #saying .ar { font-size: 42px; line-height: 1.5; }
 .haskids #saying .en { max-width: 1160px; font-size: 28px; }
 .haskids #saying:before { margin-bottom: 16px; }
+
+/* both family cards: the saying goes in the middle, a little smaller */
+.hasparents #saying { left: 590px; width: 740px; top: 470px; }
+.hasparents #saying .ar { font-size: 36px; line-height: 1.5; }
+.hasparents #saying .en { max-width: 740px; font-size: 24px; line-height: 1.3; }
+.hasparents #saying .src { font-size: 17px; letter-spacing: 3px; }
 
 /* ---------- saying ---------- */
 #saying { position: absolute; left: 200px; width: 1520px; top: 590px; text-align: center; }

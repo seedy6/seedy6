@@ -11,6 +11,8 @@ It shows:
 - A saying or hadith each minute, in Arabic and English.
 - The grandchildren, one at a time (a new one every 10 seconds): photo, name and
   age to the day ("1 year, 2 months and 7 days"), with a birthday message.
+- "Our Children" on the left: the parents of the grandchild on the right. Their
+  card changes with the grandchild, and stays still between siblings.
 - Bolton prayer times, a YouTube tile, and an iStar tile that shows the iStar
   box on HDMI 2 inside the app (press Back to return).
 - A sky that follows the sun, with sparkles and shooting stars at night.
@@ -36,7 +38,9 @@ This repo is public, so the photos, names and birth dates are never in it.
 `app/family/` is in `.gitignore`.
 
 1. Put the photos in `~/Pictures/Salam family/` with a `family.json`:
-   `[{"name": "...", "born": "YYYY-MM-DD", "photo": "IMG_1234.HEIC"}, ...]`
+   `{"grandchildren": [{"name": "...", "born": "YYYY-MM-DD", "photo": "IMG_1234.HEIC"}],
+     "children": [{"name": "A & B", "photo": "x.jpg", "kids": ["..."]}]}`
+   Add `"crop": [left, top, size]` when a photo has other people or things in it.
 2. Run `python3 tools/prepare_family.py`. It crops each photo square around the
    face and writes `~/Pictures/Salam family/tv/`.
 3. Run `./deploy.sh`. It copies that folder onto the TV as `family/`.
