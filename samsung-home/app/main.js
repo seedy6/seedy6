@@ -233,7 +233,7 @@
 
   // ---------- grandchildren (private data in family/family.js) ----------
   // window.SALAM_FAMILY = [{ name: "...", born: "YYYY-MM-DD", photo: "family/x.jpg" }, ...]
-  var KID_SECONDS = 20;
+  var KID_SECONDS = 10;                   // seconds per grandchild
   function daysInMonth(y, m) { return new Date(y, m + 1, 0).getDate(); }   // m: 0-11
   function plural(n, word) { return n + " " + word + (n === 1 ? "" : "s"); }
   // Calendar age to the day: whole months since birth (a 31st counts as the last day

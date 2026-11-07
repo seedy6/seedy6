@@ -9,7 +9,7 @@ It shows:
 - The weather for Bolton in English: now (with a moving picture), feels-like,
   high and low, wind and chance of rain, and cards for the next three days.
 - A saying or hadith each minute, in Arabic and English.
-- The grandchildren, one at a time (a new one every 20 seconds): photo, name and
+- The grandchildren, one at a time (a new one every 10 seconds): photo, name and
   age to the day ("1 year, 2 months and 7 days"), with a birthday message.
 - Bolton prayer times, a YouTube tile, and an iStar tile that shows the iStar
   box on HDMI 2 inside the app (press Back to return).
